@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">Google Photo Killer</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="Registration">Регистрация</string>
+    <string name="Authorization">Авторизация</string>
+    <string name="Logout">Выход</string>
+    <string name="password_not_match">Пароли не совпадают</string>
+    <string name="user_not_register">Не удалось зарегистрировать пользователя</string>
+    <string name="Yes">Да</string>
+    <string name="No">Нет</string>
+    <string name="Back">Назад</string>
+
+
+    <string name="action_settings">Настройки</string>
+</resources>
