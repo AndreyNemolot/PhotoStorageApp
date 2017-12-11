@@ -1,4 +1,4 @@
-package com.example.nemol.googlephotokiller;
+package com.example.nemol.googlephotokiller.Fragment;
 
 import android.app.DialogFragment;
 import android.os.Bundle;
@@ -11,17 +11,19 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.example.nemol.googlephotokiller.Controller.UserController;
+import com.example.nemol.googlephotokiller.Callback.CreateAnswerCallback;
 import com.example.nemol.googlephotokiller.Model.User;
+import com.example.nemol.googlephotokiller.R;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 /**
- * Created by nemol on 14.11.2017.
+ * Created by nemol on 11.12.2017.
  */
 
-public class RegistrationDialogFragment extends DialogFragment implements CreateAnswerCallback{
+public class RegistrationDialogFragment extends DialogFragment implements CreateAnswerCallback {
 
     @BindView(R.id.input_login)
     EditText etLogin;
@@ -41,8 +43,8 @@ public class RegistrationDialogFragment extends DialogFragment implements Create
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        UserController.registerCallBack(this);
         View dialogView = inflater.inflate(R.layout.register_dialog, null);
+        UserController.registerCallBack(this);
         ButterKnife.bind(this, dialogView);
         return dialogView;
     }

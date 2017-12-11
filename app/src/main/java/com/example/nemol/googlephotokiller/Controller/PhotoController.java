@@ -1,7 +1,11 @@
 package com.example.nemol.googlephotokiller.Controller;
 
+import android.content.Context;
+import android.database.Cursor;
+import android.net.Uri;
+import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
-import com.example.nemol.googlephotokiller.CreateAnswerCallback;
+import com.example.nemol.googlephotokiller.Callback.CreateAnswerCallback;
 import com.example.nemol.googlephotokiller.RestClient;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
@@ -17,17 +21,29 @@ import cz.msebera.android.httpclient.Header;
 
 public class PhotoController extends AppCompatActivity {
 
+    private final static String PHOTO_URL = "photo/photo";
     private static CreateAnswerCallback callback;
 
     public static void registerCallBack(CreateAnswerCallback clbk) {
         callback = clbk;
     }
 
-    public static void uploadPhoto() {
+    public static String getAbsPath(Context context, Uri uri) {
+        String[] projection = {MediaStore.Images.Media.DATA};
+        Cursor cursor = context.getContentResolver().query(uri, projection, null, null, null);
+        assert cursor != null;
+        cursor.moveToFirst();
+        int columnIndex = cursor.getColumnIndex(projection[0]);
+        String picturePath = cursor.getString(columnIndex); // returns null
+        cursor.close();
+        return picturePath;
+    }
 
+    public static void uploadPhoto(Context context, Uri uri) {
+// TODO: 05.12.2017 сделать сервис загрузки
         RequestParams params = new RequestParams();
         final String contentType = RequestParams.APPLICATION_OCTET_STREAM;
-        File myFile = new File("/storage/emulated/0/wallpapers/2.jpg");
+        File myFile = new File(getAbsPath(context, uri));
         try {
             params.put("file", myFile, contentType);
             params.put("album_id", 1);
@@ -36,7 +52,7 @@ public class PhotoController extends AppCompatActivity {
         }
         params.setHttpEntityIsRepeatable(true);
         params.setUseJsonStreamer(false);
-        RestClient.post("photo/photo", params, new JsonHttpResponseHandler() {
+        RestClient.post(PHOTO_URL, params, new JsonHttpResponseHandler() {
 
             @Override
             public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {

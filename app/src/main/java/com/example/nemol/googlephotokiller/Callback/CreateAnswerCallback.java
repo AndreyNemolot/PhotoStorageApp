@@ -1,4 +1,4 @@
-package com.example.nemol.googlephotokiller;
+package com.example.nemol.googlephotokiller.Callback;
 
 /**
  * Created by nemol on 12.11.2017.

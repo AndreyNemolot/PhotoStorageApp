@@ -1,12 +1,11 @@
 package com.example.nemol.googlephotokiller.Activity;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -19,20 +18,24 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.nemol.googlephotokiller.AuthorizationDialogFragment;
+
 import com.example.nemol.googlephotokiller.Controller.PhotoController;
-import com.example.nemol.googlephotokiller.CreateAnswerCallback;
+import com.example.nemol.googlephotokiller.Callback.CreateAnswerCallback;
+import com.example.nemol.googlephotokiller.Fragment.AuthorizationDialogFragment;
+import com.example.nemol.googlephotokiller.Fragment.ChoiceAlbumFragment;
+import com.example.nemol.googlephotokiller.Fragment.CreateAlbumDialogFragment;
+import com.example.nemol.googlephotokiller.Fragment.RegistrationDialogFragment;
 import com.example.nemol.googlephotokiller.GetPictures;
 import com.example.nemol.googlephotokiller.Model.ActiveUser;
 import com.example.nemol.googlephotokiller.MyAdapter;
 import com.example.nemol.googlephotokiller.R;
-import com.example.nemol.googlephotokiller.RegistrationDialogFragment;
+
 import com.example.nemol.googlephotokiller.Controller.UserController;
+import com.github.clans.fab.FloatingActionButton;
+import com.github.clans.fab.FloatingActionMenu;
 
 
 import java.io.File;
-import java.util.zip.Inflater;
-
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -41,12 +44,17 @@ import butterknife.OnClick;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, CreateAnswerCallback {
 
+
     @BindView(R.id.imageGallery)
     RecyclerView recyclerView;
     @BindView(R.id.nav_view)
     NavigationView navigationView;
-    @BindView(R.id.fab)
-    FloatingActionButton fab;
+    @BindView(R.id.menu)
+    FloatingActionMenu menu;
+    @BindView(R.id.menu_item_add_album)
+    FloatingActionButton fabAddAlbum;
+    @BindView(R.id.menu_item_add_photo)
+    FloatingActionButton fabAddPhoto;
     @BindView(R.id.drawer_layout)
     DrawerLayout drawer;
     @BindView(R.id.progressBarMain)
@@ -91,16 +99,49 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
     }
 
-    @OnClick(R.id.fab)
-    public void fabClick(View view) {
-        if(ActiveUser.getLogin()!=null) {
-            PhotoController.uploadPhoto();
-            progressBar.setVisibility(View.VISIBLE);
+    @OnClick(R.id.menu_item_add_photo)
+    public void addPhotoClick(View view) {
+        if (ActiveUser.getLogin() != null) {
+            ChoiceAlbumFragment choise = new ChoiceAlbumFragment();
+            choise.show(getFragmentManager(), "dlg4");
+            /*getImage();
+            progressBar.setVisibility(View.VISIBLE); // TODO: 05.12.2017 перенести туда где реально начинается загрузка
             Snackbar.make(view, "Загрузка фото", Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show();*/
+        } else {
+            Snackbar.make(view, "Пользователь не авторизирован", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show();
+        }
+    }
+
+    @OnClick(R.id.menu_item_add_album)
+    public void createAlbumClick(View view) {
+        if (ActiveUser.getLogin() != null) {
+            CreateAlbumDialogFragment create = new CreateAlbumDialogFragment();
+            create.show(getFragmentManager(), "dlg3");
         }else{
             Snackbar.make(view, "Пользователь не авторизирован", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show();
+        }
+    }
+
+    public void getImage() {
+        Intent photoPickerIntent = new Intent(Intent.ACTION_GET_CONTENT);
+        photoPickerIntent.setType("image/*");
+        startActivityForResult(photoPickerIntent, 1);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case 1: {
+                if (resultCode == RESULT_OK) {
+                    Uri chosenImageUri = data.getData().normalizeScheme();
+                    PhotoController.uploadPhoto(getApplicationContext(),chosenImageUri);
+                }
+                break;
+            }
         }
     }
 
@@ -164,6 +205,7 @@ public class MainActivity extends AppCompatActivity
                 if (action.equals("authorization")) {
                     setMenuItem(true);
                     setName(ActiveUser.getLogin());
+                    Toast.makeText(this, "Пользователь авторизован", Toast.LENGTH_LONG).show();
                 } else if (action.equals("upload")) {
                     progressBar.setVisibility(View.GONE);
                     Toast.makeText(this, "Фотография загружена", Toast.LENGTH_LONG).show();

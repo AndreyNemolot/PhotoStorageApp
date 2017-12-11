@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:orientation="vertical"
-    android:padding="5dp" >
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
     <ProgressBar
         android:id="@+id/progressBar"
-        android:visibility="invisible"
+        android:visibility="gone"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -18,26 +15,13 @@
         android:id="@+id/tv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Authorization"
+        android:text="Choose album"
         android:textAppearance="?android:attr/textAppearanceLarge" />
 
-    <EditText
-        android:id="@+id/input_login"
-        android:hint="Login"
-        android:text="andrey"
+    <Spinner
+        android:id="@+id/spAlbum"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
-        <requestFocus />
-    </EditText>
-
-    <EditText
-        android:id="@+id/input_password"
-        android:hint="Password"
-        android:text="12345"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
-        <requestFocus />
-    </EditText>
+        android:layout_height="wrap_content" />
 
     <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
@@ -49,7 +33,7 @@
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/No"
+            android:text="@string/Back"
             android:id="@+id/btnNo"
             android:layout_marginRight="@dimen/activity_horizontal_margin"
             />

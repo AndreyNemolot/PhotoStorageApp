@@ -1,7 +1,7 @@
 package com.example.nemol.googlephotokiller.Controller;
 
 
-import com.example.nemol.googlephotokiller.CreateAnswerCallback;
+import com.example.nemol.googlephotokiller.Callback.CreateAnswerCallback;
 import com.example.nemol.googlephotokiller.Model.ActiveUser;
 import com.example.nemol.googlephotokiller.Model.User;
 import com.example.nemol.googlephotokiller.RestClient;
@@ -52,16 +52,13 @@ public class UserController {
             @Override
             public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
                 super.onFailure(statusCode, headers, responseString, throwable);
-
             }
 
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONArray timeline) {
-                // Pull out the first event on the public timeline
                 try {
                     JSONObject firstEvent = (JSONObject) timeline.get(0);
                     callback.createAnswer(statusCode, "authorization");
-
                 } catch (JSONException ex) {
                 }
             }

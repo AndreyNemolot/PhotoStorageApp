@@ -1,4 +1,4 @@
-package com.example.nemol.googlephotokiller;
+package com.example.nemol.googlephotokiller.Fragment;
 
 import android.app.DialogFragment;
 import android.os.Bundle;
@@ -10,14 +10,14 @@ import android.widget.ProgressBar;
 
 import com.example.nemol.googlephotokiller.Controller.UserController;
 import com.example.nemol.googlephotokiller.Model.ActiveUser;
-import com.example.nemol.googlephotokiller.Model.User;
+import com.example.nemol.googlephotokiller.R;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 /**
- * Created by nemol on 14.11.2017.
+ * Created by nemol on 11.12.2017.
  */
 
 public class AuthorizationDialogFragment extends DialogFragment {

@@ -12,6 +12,8 @@
     <string name="Yes">Да</string>
     <string name="No">Нет</string>
     <string name="Back">Назад</string>
+    <string name="Add_album">Добавить альбом</string>
+    <string name="Add_photo">Добавить фото</string>
 
 
     <string name="action_settings">Настройки</string>
