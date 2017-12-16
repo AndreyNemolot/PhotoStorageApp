@@ -19,21 +19,31 @@ public class RestClient {
     private static AsyncHttpClient client = new AsyncHttpClient();
 
     public static void get(String url, RequestParams params, AsyncHttpResponseHandler responseHandler) {
-        if(isAuth()) {
+        //if(isAuth()) {
             client.get(getAbsoluteUrl(url), params, responseHandler);
-        }
+        //}
+    }
+
+    public static void authorization(String login, String password, String url, RequestParams params, AsyncHttpResponseHandler responseHandler) {
+        client.setBasicAuth(login, password);
+            client.get(getAbsoluteUrl(url), params, responseHandler);
+    }
+
+    public static void registration(String url, RequestParams params, AsyncHttpResponseHandler responseHandler) {
+        client.setBasicAuth("admin", "admin");
+        client.post(getAbsoluteUrl(url), params, responseHandler);
     }
 
     public static void post(String url, RequestParams params, AsyncHttpResponseHandler responseHandler) {
-        if(isAuth()) {
+        //if(isAuth()) {
             client.post(getAbsoluteUrl(url), params, responseHandler);
-        }
+        //}
     }
 
     public static void delete(String url, AsyncHttpResponseHandler responseHandler) {
-        if(isAuth()) {
+        //if(isAuth()) {
             client.delete(getAbsoluteUrl(url), responseHandler);
-        }
+        //}
     }
 
     static boolean isAuth(){

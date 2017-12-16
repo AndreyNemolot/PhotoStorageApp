@@ -1,8 +1,9 @@
 package com.example.nemol.googlephotokiller.Activity;
 
 import android.content.Intent;
-import android.net.Uri;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -19,6 +20,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 
+import com.example.nemol.googlephotokiller.Callback.PhotoAnswerCallback;
 import com.example.nemol.googlephotokiller.Controller.PhotoController;
 import com.example.nemol.googlephotokiller.Callback.CreateAnswerCallback;
 import com.example.nemol.googlephotokiller.Fragment.AuthorizationDialogFragment;
@@ -42,7 +44,7 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, CreateAnswerCallback {
+        implements NavigationView.OnNavigationItemSelectedListener, CreateAnswerCallback, PhotoAnswerCallback {
 
 
     @BindView(R.id.imageGallery)
@@ -63,18 +65,53 @@ public class MainActivity extends AppCompatActivity
     Toolbar toolbar;
     private MyAdapter adapter;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
         ButterKnife.bind(this);
         setSupportActionBar(toolbar);
         UserController.registerCallBack(this);
         PhotoController.registerCallBack(this);
+        ChoiceAlbumFragment.registerCallBack(this);
 
+        setImages();
+
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.setDrawerListener(toggle);
+        toggle.syncState();
+        navigationView.setNavigationItemSelectedListener(this);
+        loadText();
+    }
+
+    void saveUser() {
+        SharedPreferences sPref;
+        sPref = getPreferences(MODE_PRIVATE);
+        SharedPreferences.Editor ed = sPref.edit();
+        ed.putString("saved_text", Integer.toString(ActiveUser.getId()));
+        ed.putString("login", ActiveUser.getLogin());
+        ed.putString("password", ActiveUser.getPassword());
+        ed.apply();
+        Toast.makeText(this, "User saved", Toast.LENGTH_SHORT).show();
+    }
+
+    void loadText() {
+        SharedPreferences sPref;
+        sPref = getPreferences(MODE_PRIVATE);
+        if (!sPref.getString("login", "").equals("")) {
+            ActiveUser.setId(Integer.decode(sPref.getString("id", "")));
+            ActiveUser.setLogin(sPref.getString("login", ""));
+            ActiveUser.setPassword(sPref.getString("password", ""));
+            UserController.authorization();
+            Toast.makeText(this, "User loaded", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "User NOT loaded", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    void setImages() {
         recyclerView.setHasFixedSize(true);
         RecyclerView.LayoutManager layoutManager = new GridLayoutManager(getApplicationContext(), 2);
         recyclerView.setLayoutManager(layoutManager);
@@ -90,24 +127,13 @@ public class MainActivity extends AppCompatActivity
             }
         });
         recyclerView.setAdapter(adapter);
-
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.setDrawerListener(toggle);
-        toggle.syncState();
-
-        navigationView.setNavigationItemSelectedListener(this);
     }
 
     @OnClick(R.id.menu_item_add_photo)
     public void addPhotoClick(View view) {
-        if (ActiveUser.getLogin() != null) {
-            ChoiceAlbumFragment choise = new ChoiceAlbumFragment();
-            choise.show(getFragmentManager(), "dlg4");
-            /*getImage();
-            progressBar.setVisibility(View.VISIBLE); // TODO: 05.12.2017 перенести туда где реально начинается загрузка
-            Snackbar.make(view, "Загрузка фото", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show();*/
+        if (ActiveUser.getId() > 0) {
+            ChoiceAlbumFragment choice = new ChoiceAlbumFragment();
+            choice.show(getFragmentManager(), "dlg4");
         } else {
             Snackbar.make(view, "Пользователь не авторизирован", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show();
@@ -116,32 +142,12 @@ public class MainActivity extends AppCompatActivity
 
     @OnClick(R.id.menu_item_add_album)
     public void createAlbumClick(View view) {
-        if (ActiveUser.getLogin() != null) {
+        if (ActiveUser.getId() > 0) {
             CreateAlbumDialogFragment create = new CreateAlbumDialogFragment();
             create.show(getFragmentManager(), "dlg3");
-        }else{
+        } else {
             Snackbar.make(view, "Пользователь не авторизирован", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show();
-        }
-    }
-
-    public void getImage() {
-        Intent photoPickerIntent = new Intent(Intent.ACTION_GET_CONTENT);
-        photoPickerIntent.setType("image/*");
-        startActivityForResult(photoPickerIntent, 1);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        switch (requestCode) {
-            case 1: {
-                if (resultCode == RESULT_OK) {
-                    Uri chosenImageUri = data.getData().normalizeScheme();
-                    PhotoController.uploadPhoto(getApplicationContext(),chosenImageUri);
-                }
-                break;
-            }
         }
     }
 
@@ -157,7 +163,7 @@ public class MainActivity extends AppCompatActivity
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
 
         int id = item.getItemId();
 
@@ -168,55 +174,67 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_manage) {
 
         } else if (id == R.id.nav_auth) {
-
             AuthorizationDialogFragment auth = new AuthorizationDialogFragment();
             auth.show(getFragmentManager(), "dlg2");
         } else if (id == R.id.nav_register) {
             RegistrationDialogFragment reg = new RegistrationDialogFragment();
             reg.show(getFragmentManager(), "dlg1");
         } else if (id == R.id.nav_logout) {
-            ActiveUser.setLogin(null);
-            ActiveUser.setPassword(null);
-            setMenuItem(false);
-            setName("GPhotoKiller");
-
+            ActiveUser.isAuth(false);
+            setMenuItemAuthorized(false);
+            saveUser();
         }
-
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
 
-    void setMenuItem(boolean isAuth) {
+    void setMenuItemAuthorized(boolean isAuth) {
+        if (isAuth) {
+            setNavBarName(ActiveUser.getLogin());
+        } else {
+            setNavBarName("GPhotoKiller");
+        }
         navigationView.getMenu().findItem(R.id.nav_auth).setVisible(!isAuth);
         navigationView.getMenu().findItem(R.id.nav_register).setVisible(!isAuth);
         navigationView.getMenu().findItem(R.id.nav_logout).setVisible(isAuth);
     }
 
-    void setName(String name) {
+    void setNavBarName(String name) {
         View header = navigationView.findViewById(R.id.navHeader);
-        TextView tvName = (TextView) header.findViewById(R.id.tvUserName);
+        TextView tvName = header.findViewById(R.id.tvUserName);
         tvName.setText(name);
     }
 
     @Override
-    public void createAnswer(int code, String action) {
+    public void createAnswer(int code) {
         switch (code) {
             case 200: //пользователь авторизирован
-                if (action.equals("authorization")) {
-                    setMenuItem(true);
-                    setName(ActiveUser.getLogin());
-                    Toast.makeText(this, "Пользователь авторизован", Toast.LENGTH_LONG).show();
-                } else if (action.equals("upload")) {
-                    progressBar.setVisibility(View.GONE);
-                    Toast.makeText(this, "Фотография загружена", Toast.LENGTH_LONG).show();
-                }
+                setMenuItemAuthorized(true);
+                setNavBarName(ActiveUser.getLogin());
+                saveUser();
+                Toast.makeText(this, "Пользователь авторизован", Toast.LENGTH_LONG).show();
                 break;
             case 409:
-                if (action.equals("upload")) {
-                    progressBar.setVisibility(View.GONE);
-                    Toast.makeText(this, "Не удалось агрузить фотографию", Toast.LENGTH_LONG).show();
-                }
+                Toast.makeText(this, "Что то пошло не так", Toast.LENGTH_LONG).show();
                 break;
         }
     }
+
+    @Override
+    public void photoAnswer(int code) {
+        switch (code) {
+            case -1:
+                progressBar.setVisibility(View.VISIBLE);
+                break;
+            case 200:
+                Toast.makeText(this, "Фото загружено", Toast.LENGTH_LONG).show();
+                progressBar.setVisibility(View.GONE);
+                break;
+            case 409:
+                Toast.makeText(this, "Не удалось загрузить фото", Toast.LENGTH_LONG).show();
+                progressBar.setVisibility(View.GONE);
+                break;
+        }
+    }
+
 }

@@ -23,8 +23,7 @@
 
     <EditText
         android:id="@+id/input_login"
-        android:hint="Login"
-        android:text="andrey"
+        android:hint="@string/Login"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
         <requestFocus />
@@ -32,8 +31,7 @@
 
     <EditText
         android:id="@+id/input_password"
-        android:hint="Password"
-        android:text="12345"
+        android:hint="@string/Registration"
         android:inputType="textPassword"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
@@ -41,8 +39,7 @@
     </EditText>
     <EditText
         android:id="@+id/input_password_check"
-        android:hint="Repeat password"
-        android:text="12345"
+        android:hint="@string/Repeat_password"
         android:inputType="textPassword"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

@@ -36,17 +36,16 @@ public class AuthorizationDialogFragment extends DialogFragment {
     }
 
     @OnClick(R.id.btnYes)
-    public void setBtnYes(View view) {
+    public void setBtnYes() {
         ActiveUser.setLogin(etLogin.getText().toString());
         ActiveUser.setPassword(etPassword.getText().toString());
         UserController.authorization();
-        // TODO: 12.11.2017 создать activeUsr
         // TODO: 12.11.2017 получать список фотографий
         dismiss();
     }
 
     @OnClick(R.id.btnNo)
-    public void setBtnNo(View view) {
+    public void setBtnNo() {
         dismiss();
     }
 

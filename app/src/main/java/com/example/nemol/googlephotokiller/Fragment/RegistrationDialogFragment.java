@@ -65,7 +65,7 @@ public class RegistrationDialogFragment extends DialogFragment implements Create
     }
 
     @OnClick(R.id.btnNo)
-    public void setBtnNo(View view) {
+    public void setBtnNo() {
         dismiss();
     }
 
@@ -74,19 +74,21 @@ public class RegistrationDialogFragment extends DialogFragment implements Create
         tvNotMatch.setVisibility(View.VISIBLE);
     }
     @Override
-    public void createAnswer(int code, String action) {
+    public void createAnswer(int code) {
         String message = "Что то пошло не так";
         switch(code){
+            case 200:
+                dismiss();
+                break;
             case 201:
-                progressBar.setVisibility(ProgressBar.GONE);
                 dismiss();
                 break;
             case 409:
                 message = "Не удалось зарегистрировать пользователя";
-                progressBar.setVisibility(ProgressBar.GONE);
                 //dismiss();
                 break;
         }
         showAnswer(message);
+        progressBar.setVisibility(ProgressBar.GONE);
     }
 }

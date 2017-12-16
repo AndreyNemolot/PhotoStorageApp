@@ -57,7 +57,7 @@ public class CreateAlbumDialogFragment extends DialogFragment implements CreateA
     }
 
     @Override
-    public void createAnswer(int code, String action) {
+    public void createAnswer(int code) {
         switch (code){
             case 409:
                 progressBar.setVisibility(View.GONE);

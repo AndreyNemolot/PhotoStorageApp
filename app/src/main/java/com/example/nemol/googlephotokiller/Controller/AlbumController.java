@@ -3,6 +3,7 @@ package com.example.nemol.googlephotokiller.Controller;
 
 import com.example.nemol.googlephotokiller.Callback.AlbumListCallback;
 import com.example.nemol.googlephotokiller.Callback.CreateAnswerCallback;
+import com.example.nemol.googlephotokiller.Model.ActiveUser;
 import com.example.nemol.googlephotokiller.Model.Album;
 import com.example.nemol.googlephotokiller.RestClient;
 import com.google.gson.Gson;
@@ -42,7 +43,7 @@ public class AlbumController {
 
     public static void createAlbum(String title) {
         RequestParams params = new RequestParams();
-        params.put("userId", 43);// TODO: 11.12.2017 брать ид из активюзер
+        params.put("userId", ActiveUser.getId());
         params.put("albumTitle", title);
 
         RestClient.post(ALBUM_URL, params, new JsonHttpResponseHandler() {
@@ -51,30 +52,21 @@ public class AlbumController {
                 super.onFailure(statusCode, headers, responseString, throwable);
                 //201 created
                 //409 conflict (user exist)
-                answerCallback.createAnswer(statusCode, "createAlbum");
-            }
-
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONArray timeline) {
-                try {
-                    JSONObject firstEvent = (JSONObject) timeline.get(0);
-
-                } catch (JSONException ex) {
-                }
+                answerCallback.createAnswer(statusCode);
             }
         });
     }
 
     public static JSONObject getAllAlbums() {
         RequestParams params = new RequestParams();
-        params.put("userId", 43);// TODO: 11.12.2017 брать ид из активюзер
-        RestClient.get(ALBUMS_URL, null, new JsonHttpResponseHandler() {
+        params.put("user_id", ActiveUser.getId());
+        RestClient.get(ALBUMS_URL, params, new JsonHttpResponseHandler() {
             @Override
             public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
                 super.onFailure(statusCode, headers, responseString, throwable);
                 //201 created
                 //409 conflict (user exist)
-                answerCallback.createAnswer(statusCode, "createAlbum");
+                answerCallback.createAnswer(statusCode);
             }
 
             @Override
@@ -96,14 +88,4 @@ public class AlbumController {
         });
         return new JSONObject();
     }
-
-    /*public static void setParams(String typeOfAction){
-        RequestParams params = new RequestParams();
-        switch (typeOfAction){
-            case "created":
-                params.put()
-                break;
-        }
-
-    }*/
 }

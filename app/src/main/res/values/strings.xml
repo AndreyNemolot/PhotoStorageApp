@@ -14,6 +14,9 @@
     <string name="Back">Назад</string>
     <string name="Add_album">Добавить альбом</string>
     <string name="Add_photo">Добавить фото</string>
+    <string name="Login">Логин</string>
+    <string name="Password">Логин</string>
+    <string name="Repeat_password">Логин</string>
 
 
     <string name="action_settings">Настройки</string>

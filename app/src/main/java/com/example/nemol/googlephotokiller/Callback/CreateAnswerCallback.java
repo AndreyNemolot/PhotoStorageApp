@@ -5,5 +5,5 @@ package com.example.nemol.googlephotokiller.Callback;
  */
 
 public interface CreateAnswerCallback {
-    void createAnswer(int code, String action);
+    void createAnswer(int code);
 }

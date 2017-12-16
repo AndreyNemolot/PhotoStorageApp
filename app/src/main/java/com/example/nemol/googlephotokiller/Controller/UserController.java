@@ -24,7 +24,7 @@ import cz.msebera.android.httpclient.Header;
 public class UserController {
 
     private final static String USER_URL = "user/user";
-    private final static int workload = 4;
+    private final static String USERS_URL = "user/users";
     private static CreateAnswerCallback callback;
 
     public static void registerCallBack(CreateAnswerCallback clb) {
@@ -32,14 +32,11 @@ public class UserController {
     }
 
     public static void registration(User usr) {
-        ActiveUser.setLogin("admin");
-        ActiveUser.setPassword("admin");
-        RestClient.post(USER_URL, setParams(usr), new JsonHttpResponseHandler() {
-
+        RestClient.registration(USER_URL, setParams(usr), new JsonHttpResponseHandler() {
             @Override
             public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
                 super.onFailure(statusCode, headers, responseString, throwable);
-                callback.createAnswer(statusCode, "registration");
+                callback.createAnswer(statusCode);
                 //201 created
                 //409 conflict (user exist)
             }
@@ -47,35 +44,29 @@ public class UserController {
     }
 
     public static void authorization() {
-        RestClient.get("photo/photos", null, new JsonHttpResponseHandler() {
-
-            @Override
-            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                super.onFailure(statusCode, headers, responseString, throwable);
-            }
-
+        RequestParams params = new RequestParams();
+        params.put("login", ActiveUser.getLogin());
+        RestClient.authorization(ActiveUser.getLogin(), ActiveUser.getPassword(), USERS_URL, params, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONArray timeline) {
                 try {
                     JSONObject firstEvent = (JSONObject) timeline.get(0);
-                    callback.createAnswer(statusCode, "authorization");
+                        ActiveUser.setId((Integer) firstEvent.get("id"));
+                        callback.createAnswer(statusCode);
                 } catch (JSONException ex) {
+                    callback.createAnswer(statusCode);
                 }
             }
         });
     }
 
-    private static String passwordEncode(String password) {
-        String salt = BCrypt.gensalt(workload);
-        return BCrypt.hashpw(password, salt);
-    }
-
     private static RequestParams setParams(User user) {
         RequestParams params = new RequestParams();
+        params.put("user_id", "100");
         params.put("login", user.getLogin());
         params.put("enabled", user.getEnabled());
         params.put("role", user.getRole());
-        params.put("password", passwordEncode(user.getPassword()));
+        params.put("password", user.getPassword());
         return params;
     }
 }
