@@ -2,13 +2,11 @@ package com.example.nemol.googlephotokiller.Controller;
 
 
 import com.example.nemol.googlephotokiller.Callback.AlbumListCallback;
-import com.example.nemol.googlephotokiller.Callback.CreateAnswerCallback;
+import com.example.nemol.googlephotokiller.Callback.UserControllerCallback;
 import com.example.nemol.googlephotokiller.Model.ActiveUser;
 import com.example.nemol.googlephotokiller.Model.Album;
 import com.example.nemol.googlephotokiller.RestClient;
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
@@ -17,7 +15,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import cz.msebera.android.httpclient.Header;
 
@@ -29,10 +26,10 @@ public class AlbumController {
 
     private final static String ALBUM_URL = "album/album";
     private final static String ALBUMS_URL = "album/albums";
-    private static CreateAnswerCallback answerCallback;
+    private static UserControllerCallback answerCallback;
     private static AlbumListCallback albumListCallback;
 
-    public static void registerAnswerCallBack(CreateAnswerCallback answer) {
+    public static void registerAnswerCallBack(UserControllerCallback answer) {
         answerCallback = answer;
     }
 
@@ -52,7 +49,7 @@ public class AlbumController {
                 super.onFailure(statusCode, headers, responseString, throwable);
                 //201 created
                 //409 conflict (user exist)
-                answerCallback.createAnswer(statusCode);
+                answerCallback.userAction(statusCode);
             }
         });
     }
@@ -66,13 +63,13 @@ public class AlbumController {
                 super.onFailure(statusCode, headers, responseString, throwable);
                 //201 created
                 //409 conflict (user exist)
-                answerCallback.createAnswer(statusCode);
+                //answerCallback.createAnswer(statusCode);
             }
 
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONArray timeline) {
 
-                    List<Album> list = new ArrayList<Album>();
+                    ArrayList<Album> list = new ArrayList<Album>();
                     try {
                         int i;
                         for (i = 0; i < timeline.length(); i++){

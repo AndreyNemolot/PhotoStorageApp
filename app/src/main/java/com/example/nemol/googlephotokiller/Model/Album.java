@@ -15,7 +15,7 @@ public class Album {
         return albumTitle;
     }
 
-    Album(int id, String title){
+    public Album(int id, String title){
         this.userId = id;
         this.albumTitle = title;
     }

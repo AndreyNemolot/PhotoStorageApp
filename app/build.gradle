@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 26
-    buildToolsVersion "26.0.1"
+    buildToolsVersion "26.0.2"
     defaultConfig {
         applicationId "com.example.nemol.googlephotokiller"
         minSdkVersion 19
@@ -33,7 +33,6 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile 'com.jsibbold:zoomage:1.1.0'
     compile 'com.loopj.android:android-async-http:1.4.9'
-    compile 'org.mindrot:jbcrypt:0.3m'
     compile 'com.jakewharton:butterknife:8.8.1'
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
     compile 'com.github.clans:fab:1.6.4'

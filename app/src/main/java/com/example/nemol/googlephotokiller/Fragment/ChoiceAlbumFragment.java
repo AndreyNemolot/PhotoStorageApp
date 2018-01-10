@@ -1,9 +1,15 @@
 package com.example.nemol.googlephotokiller.Fragment;
 
+import android.annotation.TargetApi;
 import android.app.DialogFragment;
+import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.support.annotation.RequiresApi;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,11 +20,15 @@ import android.widget.Spinner;
 
 import com.example.nemol.googlephotokiller.Callback.AlbumListCallback;
 import com.example.nemol.googlephotokiller.Callback.PhotoAnswerCallback;
+import com.example.nemol.googlephotokiller.Callback.UriToPathCallback;
 import com.example.nemol.googlephotokiller.Controller.AlbumController;
 import com.example.nemol.googlephotokiller.Controller.PhotoController;
+import com.example.nemol.googlephotokiller.ImageFilePath;
 import com.example.nemol.googlephotokiller.Model.Album;
 import com.example.nemol.googlephotokiller.R;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
@@ -41,11 +51,16 @@ public class ChoiceAlbumFragment extends DialogFragment implements AlbumListCall
     @BindView(R.id.btnNo)
     Button btnNo;
     static PhotoAnswerCallback progressBarActive;
+    static UriToPathCallback pathCallback;
+
 
     public static void registerCallBack(PhotoAnswerCallback callback) {
         progressBarActive = callback;
     }
 
+    public static void registerUriCallBack(UriToPathCallback callback) {
+        pathCallback = callback;
+    }
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -62,14 +77,27 @@ public class ChoiceAlbumFragment extends DialogFragment implements AlbumListCall
         startActivityForResult(photoPickerIntent, 1);
     }
 
+    void upload(Uri uri){
+
+        String path = pathCallback.getPath(uri);
+        System.out.println("URIPATH: " + path);
+        PhotoController.uploadPhoto(path, getAlbumId());
+        progressBarActive.photoAnswer(-1);
+        dismiss();
+    }
+
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode) {
             case 1: {
                 if (resultCode == RESULT_OK) {
-                    Uri chosenImageUri = data.getData().normalizeScheme();
-                    PhotoController.uploadPhoto(getActivity(),chosenImageUri, getAlbumId());
+                    String selectedImagePath;
+                    Uri selectedImageUri = data.getData();
+                    selectedImagePath = ImageFilePath.getPath(getActivity(), selectedImageUri);
+                    //System.out.println("URIPATH: " + chosenImageUri);
+                    PhotoController.uploadPhoto(selectedImagePath, getAlbumId());
                     progressBarActive.photoAnswer(-1);
                     dismiss();
                 }
@@ -94,7 +122,7 @@ public class ChoiceAlbumFragment extends DialogFragment implements AlbumListCall
     }
 
     @Override
-    public void albumsList(List<Album> albums) {
+    public void albumsList(ArrayList<Album> albums) {
         ArrayAdapter<Album> adapter =
                 new ArrayAdapter<>(getActivity(), android.R.layout.simple_spinner_item, albums);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);

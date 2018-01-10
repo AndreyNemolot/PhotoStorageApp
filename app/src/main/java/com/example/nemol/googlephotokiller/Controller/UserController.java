@@ -1,7 +1,7 @@
 package com.example.nemol.googlephotokiller.Controller;
 
 
-import com.example.nemol.googlephotokiller.Callback.CreateAnswerCallback;
+import com.example.nemol.googlephotokiller.Callback.UserControllerCallback;
 import com.example.nemol.googlephotokiller.Model.ActiveUser;
 import com.example.nemol.googlephotokiller.Model.User;
 import com.example.nemol.googlephotokiller.RestClient;
@@ -12,7 +12,6 @@ import com.loopj.android.http.RequestParams;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.mindrot.jbcrypt.BCrypt;
 
 import cz.msebera.android.httpclient.Header;
 
@@ -25,9 +24,9 @@ public class UserController {
 
     private final static String USER_URL = "user/user";
     private final static String USERS_URL = "user/users";
-    private static CreateAnswerCallback callback;
+    private static UserControllerCallback callback;
 
-    public static void registerCallBack(CreateAnswerCallback clb) {
+    public static void registerCallBack(UserControllerCallback clb) {
         callback = clb;
     }
 
@@ -36,7 +35,7 @@ public class UserController {
             @Override
             public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
                 super.onFailure(statusCode, headers, responseString, throwable);
-                callback.createAnswer(statusCode);
+                callback.userAction(statusCode);
                 //201 created
                 //409 conflict (user exist)
             }
@@ -47,14 +46,27 @@ public class UserController {
         RequestParams params = new RequestParams();
         params.put("login", ActiveUser.getLogin());
         RestClient.authorization(ActiveUser.getLogin(), ActiveUser.getPassword(), USERS_URL, params, new JsonHttpResponseHandler() {
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONArray errorResponse) {
+                super.onFailure(statusCode, headers, throwable, errorResponse);
+                callback.userAction(statusCode);
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                super.onFailure(statusCode, headers, throwable, errorResponse);
+                callback.userAction(statusCode);
+            }
+
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONArray timeline) {
                 try {
                     JSONObject firstEvent = (JSONObject) timeline.get(0);
                         ActiveUser.setId((Integer) firstEvent.get("id"));
-                        callback.createAnswer(statusCode);
+                        callback.userAction(statusCode);
                 } catch (JSONException ex) {
-                    callback.createAnswer(statusCode);
+                    callback.userAction(statusCode);
                 }
             }
         });

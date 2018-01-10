@@ -2,6 +2,7 @@ package com.example.nemol.googlephotokiller.Callback;
 
 import com.example.nemol.googlephotokiller.Model.Album;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -9,5 +10,5 @@ import java.util.List;
  */
 
 public interface AlbumListCallback {
-    void albumsList(List<Album> albums);
+    void albumsList(ArrayList<Album> albums);
 }

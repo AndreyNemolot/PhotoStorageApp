@@ -15,12 +15,18 @@ import cz.msebera.android.httpclient.auth.AuthScope;
 
 public class RestClient {
     private static final String BASE_URL = "http://192.168.1.36:8080/";
+    //private static final String BASE_URL = "http://192.168.43.33:8080/";
 
     private static AsyncHttpClient client = new AsyncHttpClient();
 
     public static void get(String url, RequestParams params, AsyncHttpResponseHandler responseHandler) {
         //if(isAuth()) {
             client.get(getAbsoluteUrl(url), params, responseHandler);
+        //}
+    }
+    public static void delete(String url, RequestParams params, AsyncHttpResponseHandler responseHandler) {
+        //if(isAuth()) {
+        client.delete(getAbsoluteUrl(url), params, responseHandler);
         //}
     }
 
@@ -58,5 +64,9 @@ public class RestClient {
     }
     private static String getAbsoluteUrl(String relativeUrl) {
         return BASE_URL + relativeUrl;
+    }
+
+    public static void get(String url, RequestParams params, FileAsyncHttpResponseHandler fileAsyncHttpResponseHandler) {
+        client.get(getAbsoluteUrl(url), params, fileAsyncHttpResponseHandler);
     }
 }

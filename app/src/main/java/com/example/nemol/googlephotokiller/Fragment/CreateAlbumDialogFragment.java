@@ -10,7 +10,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.example.nemol.googlephotokiller.Controller.AlbumController;
-import com.example.nemol.googlephotokiller.Callback.CreateAnswerCallback;
+import com.example.nemol.googlephotokiller.Callback.UserControllerCallback;
 import com.example.nemol.googlephotokiller.R;
 
 import butterknife.BindView;
@@ -21,7 +21,7 @@ import butterknife.OnClick;
  * Created by nemol on 11.12.2017.
  */
 
-public class CreateAlbumDialogFragment extends DialogFragment implements CreateAnswerCallback {
+public class CreateAlbumDialogFragment extends DialogFragment implements UserControllerCallback {
 
     @BindView(R.id.etTitle)
     EditText etTitle;
@@ -57,7 +57,7 @@ public class CreateAlbumDialogFragment extends DialogFragment implements CreateA
     }
 
     @Override
-    public void createAnswer(int code) {
+    public void userAction(int code) {
         switch (code){
             case 409:
                 progressBar.setVisibility(View.GONE);
@@ -65,6 +65,8 @@ public class CreateAlbumDialogFragment extends DialogFragment implements CreateA
                 tvMessage.setVisibility(View.VISIBLE);
                 break;
             case 201:
+                AlbumController.getAllAlbums();
+                progressBar.setVisibility(View.GONE);
                 dismiss();
                 break;
         }
