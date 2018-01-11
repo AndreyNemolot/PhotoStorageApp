@@ -89,7 +89,6 @@ public class ChoiceAlbumFragment extends DialogFragment implements AlbumListCall
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode) {
             case 1: {
                 if (resultCode == RESULT_OK) {
@@ -104,6 +103,7 @@ public class ChoiceAlbumFragment extends DialogFragment implements AlbumListCall
                 break;
             }
         }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     public int getAlbumId(){

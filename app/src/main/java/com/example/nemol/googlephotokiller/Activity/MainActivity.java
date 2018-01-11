@@ -87,12 +87,9 @@ public class MainActivity extends AppCompatActivity
         ChoiceAlbumFragment.registerCallBack(this);
         AlbumController.registerAlbumsCallBack(this);
 
-        recyclerView.setHasFixedSize(true);
+        recyclerView.setHasFixedSize(false);
         RecyclerView.LayoutManager layoutManager = new GridLayoutManager(getApplicationContext(), 2);
         recyclerView.setLayoutManager(layoutManager);
-
-        toolbar.showOverflowMenu();
-       //myToolbar.setTitleTextColor(R.color.lightPrimaryText);
 
         AlbumController.getAllAlbums();
     }

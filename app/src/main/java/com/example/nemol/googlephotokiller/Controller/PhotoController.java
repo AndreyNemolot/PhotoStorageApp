@@ -46,13 +46,11 @@ public class PhotoController extends AppCompatActivity {
 
 
     public static void uploadPhoto(String path, int albumId) {
-// TODO: 05.12.2017 сделать сервис загрузки
+
         RequestParams params = new RequestParams();
         final String contentType = RequestParams.APPLICATION_OCTET_STREAM;
         File myFile = new File(path);
 
-        //File myFile = new File(uri.toString());
-        System.out.println(path);
         try {
             params.put("file", myFile, contentType);
             params.put("album_id", albumId);
@@ -71,17 +69,12 @@ public class PhotoController extends AppCompatActivity {
         });
     }
 
-    private static String getPhotoName(Photo photo) {
-        String[] link = photo.getPhotoLink().split("//");
-        return link[link.length - 1];
-    }
-
     public static void downloadPhoto(Context context, List<Photo> photoList) {
 // TODO: 05.12.2017 сделать сервис загрузки
 
         for (int i = 0; i < photoList.size(); i++) {
             Photo photo = photoList.get(i);
-            final String name = getPhotoName(photo);
+            final String name = photo.getPhotoLink();
 
             if (!new File(PHOTO_PATH + name).exists()) {
 
@@ -136,9 +129,7 @@ public class PhotoController extends AppCompatActivity {
     }
 
     private static boolean delete(Photo photo){
-        String[] link = photo.getPhotoLink().split("//");
-        final String name = link[link.length-1];;
-        File file = new File(PHOTO_PATH + name);
+        File file = new File(PHOTO_PATH + photo.getPhotoLink());
         return file.delete();
     }
 
