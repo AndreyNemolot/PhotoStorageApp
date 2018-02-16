@@ -5,13 +5,20 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context="com.example.nemol.googlephotokiller.Activity.MainActivity"
-    tools:showIn="@layout/app_bar_main"
-    android:orientation="vertical">
+    tools:context="com.example.nemol.googlephotokiller.Activity.ImagesActivity"
+    android:orientation="vertical"
+    tools:showIn="@layout/activity_images">
 
+    <ProgressBar
+        android:id="@+id/progressBarMain"
+        android:visibility="gone"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:indeterminate="true"/>
 
     <android.support.v7.widget.RecyclerView
-        android:id="@+id/list_album"
+        android:id="@+id/imageGallery"
         xmlns:tools="http://schemas.android.com/tools"
         android:scrollbars="vertical"
         android:layout_width="match_parent"

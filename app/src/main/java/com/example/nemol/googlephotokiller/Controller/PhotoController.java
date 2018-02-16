@@ -1,6 +1,7 @@
 package com.example.nemol.googlephotokiller.Controller;
 
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
@@ -8,6 +9,7 @@ import android.support.v7.app.AppCompatActivity;
 
 import com.example.nemol.googlephotokiller.Callback.PhotoAnswerCallback;
 import com.example.nemol.googlephotokiller.Callback.PhotoControllerCallback;
+import com.example.nemol.googlephotokiller.DownloadPhotoService;
 import com.example.nemol.googlephotokiller.Model.Photo;
 import com.example.nemol.googlephotokiller.RestClient;
 import com.google.gson.Gson;
@@ -17,6 +19,7 @@ import com.loopj.android.http.RequestParams;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -39,10 +42,14 @@ public class PhotoController extends AppCompatActivity {
     private static PhotoAnswerCallback progressBarActive;
     private static PhotoControllerCallback photoListCallback;
 
-    public static void registerCallBack(PhotoAnswerCallback photoCallback, PhotoControllerCallback listCallback) {
+    public static void registerProgressBarCallBack(PhotoAnswerCallback photoCallback) {
         progressBarActive = photoCallback;
+    }
+
+    public static void registerPhotoListCallBack(PhotoControllerCallback listCallback) {
         photoListCallback = listCallback;
     }
+
 
 
     public static void uploadPhoto(String path, int albumId) {
@@ -98,7 +105,7 @@ public class PhotoController extends AppCompatActivity {
         progressBarActive.photoAnswer(HttpStatus.SC_CREATED);
     }
 
-    public static void getAllPhotos(int album) {
+    public static void getPhotoList(int album) {
         RequestParams params = new RequestParams();
         params.put("album_id", album);
         final List<Photo> list = new ArrayList<>();
@@ -123,32 +130,27 @@ public class PhotoController extends AppCompatActivity {
                 } catch (JSONException e) {
                     System.out.println(e.getMessage());
                 }
-
             }
         });
     }
 
-    private static boolean delete(Photo photo){
-        File file = new File(PHOTO_PATH + photo.getPhotoLink());
-        return file.delete();
-    }
-
     public static void deletePhoto(Photo photo) {
-        delete(photo);
+        new File(PHOTO_PATH + photo.getPhotoLink()).delete();
         RequestParams params = new RequestParams();
         params.put("photo_id", photo.getPhotoId());
-        RestClient.delete(PHOTO_URL, params, new JsonHttpResponseHandler(){
+        RestClient.delete(PHOTO_URL, params, new JsonHttpResponseHandler() {
 
             @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONArray timeline) {
-                progressBarActive.photoAnswer(204);
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                progressBarActive.photoAnswer(statusCode);
             }
 
             @Override
             public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
                 super.onFailure(statusCode, headers, responseString, throwable);
-                progressBarActive.photoAnswer(204);
+                progressBarActive.photoAnswer(statusCode);
             }
+
         });
     }
 

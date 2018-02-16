@@ -4,12 +4,14 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
+import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.example.nemol.googlephotokiller.BitmapTransform;
 import com.example.nemol.googlephotokiller.Model.Album;
 import com.example.nemol.googlephotokiller.Model.Photo;
 import com.example.nemol.googlephotokiller.R;
@@ -25,6 +27,8 @@ import java.util.List;
 public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.ViewHolder> {
 
     private final String PHOTO_PATH = "file:///data/data/com.example.nemol.googlephotokiller/cache/";
+    private  int MAX_WIDTH = 420;
+    private  int MAX_HEIGHT = 420;
 
     public interface OnItemClickListener {
         void onItemClick(String item);
@@ -75,7 +79,10 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.ViewHolder> 
             String[] link = item.getPhotoLink().split("//");
             final String name = PHOTO_PATH + link[link.length-1];
 
-            Picasso.with(itemView.getContext()).load(name).centerCrop().resize(540, 540).into(img);
+            int size = (int) Math.ceil(Math.sqrt(MAX_WIDTH * MAX_HEIGHT));
+            Picasso.with(itemView.getContext()).load(name).transform(new BitmapTransform(MAX_WIDTH, MAX_HEIGHT))
+                    .resize(size, size).centerCrop()
+                    .into(img);
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -86,7 +93,6 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.ViewHolder> 
                 @Override
                 public boolean onLongClick(View view) {
                     longListener.onLongClick(item);
-
                     return true;
                 }
             });
