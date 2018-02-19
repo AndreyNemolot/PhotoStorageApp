@@ -9,19 +9,23 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.example.nemol.googlephotokiller.Callback.AlbumControllerCallback;
 import com.example.nemol.googlephotokiller.Controller.AlbumController;
-import com.example.nemol.googlephotokiller.Callback.UserControllerCallback;
+import com.example.nemol.googlephotokiller.Model.Album;
 import com.example.nemol.googlephotokiller.R;
+
+import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import cz.msebera.android.httpclient.HttpStatus;
 
 /**
  * Created by nemol on 11.12.2017.
  */
 
-public class CreateAlbumDialogFragment extends DialogFragment implements UserControllerCallback {
+public class CreateAlbumDialogFragment extends DialogFragment implements AlbumControllerCallback {
 
     @BindView(R.id.etTitle)
     EditText etTitle;
@@ -29,13 +33,18 @@ public class CreateAlbumDialogFragment extends DialogFragment implements UserCon
     TextView tvMessage;
     @BindView(R.id.progressBar)
     ProgressBar progressBar;
+    private static AlbumControllerCallback albumCallback;
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View dialogView = inflater.inflate(R.layout.create_album_dialog, null);
         ButterKnife.bind(this, dialogView);
-        AlbumController.registerAnswerCallBack(this);
+        AlbumController.registerAlbumCallBack(this);
         return dialogView;
+    }
+
+    public static void registerAlbumCallBack(AlbumControllerCallback callback) {
+        albumCallback = callback;
     }
 
     @OnClick(R.id.btnYes)
@@ -57,18 +66,34 @@ public class CreateAlbumDialogFragment extends DialogFragment implements UserCon
     }
 
     @Override
-    public void userAction(int code) {
+    public void addAlbum(int code) {
         switch (code){
-            case 409:
+            case HttpStatus.SC_CONFLICT:
                 progressBar.setVisibility(View.GONE);
                 tvMessage.setText("Альбом с таким названием существует");
                 tvMessage.setVisibility(View.VISIBLE);
                 break;
-            case 201:
+            case HttpStatus.SC_CREATED:
                 AlbumController.getAllAlbums();
                 progressBar.setVisibility(View.GONE);
+                albumCallback.addAlbum(HttpStatus.SC_CREATED);
                 dismiss();
                 break;
         }
+    }
+
+    @Override
+    public void getAlbum() {
+
+    }
+
+    @Override
+    public void getAlbumList(int code, ArrayList<Album> albums) {
+
+    }
+
+    @Override
+    public void deleteAlbum(int code) {
+
     }
 }

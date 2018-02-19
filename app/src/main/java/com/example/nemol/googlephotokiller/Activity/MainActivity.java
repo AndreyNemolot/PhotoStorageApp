@@ -1,5 +1,7 @@
 package com.example.nemol.googlephotokiller.Activity;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
@@ -16,8 +18,7 @@ import android.widget.Toast;
 
 
 import com.example.nemol.googlephotokiller.Adapter.AlbumAdapter;
-import com.example.nemol.googlephotokiller.Callback.AlbumListCallback;
-import com.example.nemol.googlephotokiller.Callback.PhotoAnswerCallback;
+import com.example.nemol.googlephotokiller.Callback.AlbumControllerCallback;
 import com.example.nemol.googlephotokiller.Controller.AlbumController;
 import com.example.nemol.googlephotokiller.Controller.PhotoController;
 import com.example.nemol.googlephotokiller.Fragment.CreateAlbumDialogFragment;
@@ -37,8 +38,7 @@ import butterknife.OnClick;
 import cz.msebera.android.httpclient.HttpStatus;
 
 public class MainActivity extends AppCompatActivity
-        implements PhotoAnswerCallback,
-        AlbumListCallback {
+        implements AlbumControllerCallback {
 
 
     @BindView(R.id.list_album)
@@ -57,12 +57,11 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         ButterKnife.bind(this);
         setSupportActionBar(toolbar);
 
-        PhotoController.registerProgressBarCallBack(this);
-        AlbumController.registerAlbumsCallBack(this);
+        CreateAlbumDialogFragment.registerAlbumCallBack(this);
+        AlbumController.registerAlbumCallBack(this);
 
         albumList.setHasFixedSize(false);
         RecyclerView.LayoutManager layoutManager = new GridLayoutManager(getApplicationContext(), 2);
@@ -104,57 +103,70 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    @Override
-    public void photoAnswer(int code) {
-        switch (code) {
-            case HttpStatus.SC_ACCEPTED:
-                Toast.makeText(this, "Фото загружено в альбом", Toast.LENGTH_LONG).show();
-                //progressBar.setVisibility(View.GONE);
-                //setImages(); // TODO: 24.12.2017 если в этом альбоме
-                break;
-            case -1:
-                //progressBar.setVisibility(View.VISIBLE);
-                break;
-            case HttpStatus.SC_CREATED:
-                Toast.makeText(this, "Фото загружены на телефон", Toast.LENGTH_LONG).show();
-                //progressBar.setVisibility(View.GONE);
-                //setImages();
-                break;
-            case HttpStatus.SC_OK:
-                Toast.makeText(this, "Получен список фотографий", Toast.LENGTH_LONG).show();
-                break;
-            case 409:
-                Toast.makeText(this, "Не удалось загрузить фото", Toast.LENGTH_LONG).show();
-                //progressBar.setVisibility(View.GONE);
-                break;
-            case 204:
-                Toast.makeText(this, "Фото удалено", Toast.LENGTH_LONG).show();
-                AlbumController.getAllAlbums();
-                //setImages();
-                break;
-        }
-    }
-
-    @Override
-    public void albumsList(final ArrayList<Album> albums) {
-        final Intent intent = new Intent(this, ImagesActivity.class);
-
+    public void setAlbumList(ArrayList<Album> albums) {
         AlbumAdapter adapter = new AlbumAdapter(albums, new AlbumAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(Album item) {
-                intent.putExtra("albumId", item.getAlbumId());
-                intent.putExtra("albumTitle", item.getAlbumTitle());
-                //PhotoController.getPhotoList(item.getAlbumId());
-                startActivity(intent);
-
+                openImagesActivity(item);
             }
         }, new AlbumAdapter.OnLongClickListener() {
             @Override
-            public void onLongClick(Album item) {
-                //PhotoController.deletePhoto(photo);
+            public void onLongClick(final Album item) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setTitle("Вы уверены")
+                        .setMessage("Хотите удалить альбом и все фотографии в нём?")
+                        .setPositiveButton("Да",
+                                new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int id) {
+                                        AlbumController.deleteAlbum(item.getAlbumId());
+                                    }
+                                })
+                        .setNegativeButton("Нет",
+                                new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int id) {
+                                        dialog.cancel();
+                                    }
+                                });
+
+                AlertDialog alert = builder.create();
+                alert.show();
             }
         });
         albumList.setAdapter(adapter);
     }
 
+    public void openImagesActivity(Album item) {
+        Intent intent = new Intent(this, ImagesActivity.class);
+        intent.putExtra("albumId", item.getAlbumId());
+        intent.putExtra("albumTitle", item.getAlbumTitle());
+        startActivity(intent);
+    }
+
+    @Override
+    public void getAlbumList(int code, ArrayList<Album> albums) {
+        if (code == HttpStatus.SC_OK) {
+            Toast.makeText(this, "Получен список альбомов", Toast.LENGTH_LONG).show();
+            setAlbumList(albums);
+        } else {
+            Toast.makeText(this, "Не удалось получить список альбомов", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    @Override
+    public void addAlbum(int code) {
+        Toast.makeText(this, "!!!!!", Toast.LENGTH_LONG).show();
+        AlbumController.registerAlbumCallBack(this);
+        AlbumController.getAllAlbums();
+    }
+
+    @Override
+    public void deleteAlbum(int code) {
+        Toast.makeText(this, "Альбом удалён", Toast.LENGTH_LONG).show();
+        AlbumController.registerAlbumCallBack(this);
+        AlbumController.getAllAlbums();
+    }
+
+    @Override
+    public void getAlbum() {
+    }
 }

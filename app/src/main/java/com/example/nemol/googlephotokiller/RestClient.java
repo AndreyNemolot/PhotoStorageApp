@@ -20,19 +20,16 @@ public class RestClient {
     private static AsyncHttpClient client = new AsyncHttpClient();
 
     public static void get(String url, RequestParams params, AsyncHttpResponseHandler responseHandler) {
-        //if(isAuth()) {
-            client.get(getAbsoluteUrl(url), params, responseHandler);
-        //}
+        client.get(getAbsoluteUrl(url), params, responseHandler);
     }
+
     public static void delete(String url, RequestParams params, AsyncHttpResponseHandler responseHandler) {
-        //if(isAuth()) {
         client.delete(getAbsoluteUrl(url), params, responseHandler);
-        //}
     }
 
     public static void authorization(String login, String password, String url, RequestParams params, AsyncHttpResponseHandler responseHandler) {
         client.setBasicAuth(login, password);
-            client.get(getAbsoluteUrl(url), params, responseHandler);
+        client.get(getAbsoluteUrl(url), params, responseHandler);
     }
 
     public static void registration(String url, RequestParams params, AsyncHttpResponseHandler responseHandler) {
@@ -41,27 +38,13 @@ public class RestClient {
     }
 
     public static void post(String url, RequestParams params, AsyncHttpResponseHandler responseHandler) {
-        //if(isAuth()) {
-            client.post(getAbsoluteUrl(url), params, responseHandler);
-        //}
+        client.post(getAbsoluteUrl(url), params, responseHandler);
     }
 
     public static void delete(String url, AsyncHttpResponseHandler responseHandler) {
-        //if(isAuth()) {
-            client.delete(getAbsoluteUrl(url), responseHandler);
-        //}
+        client.delete(getAbsoluteUrl(url), responseHandler);
     }
 
-    static boolean isAuth(){
-        String login = ActiveUser.getLogin();
-        String password = ActiveUser.getPassword();
-        if(login != null && password != null) {
-            client.setBasicAuth(login, password);
-            return true;
-        }
-        Log.e("LOG", "Логин и пароль равны null");
-        return false;
-    }
     private static String getAbsoluteUrl(String relativeUrl) {
         return BASE_URL + relativeUrl;
     }

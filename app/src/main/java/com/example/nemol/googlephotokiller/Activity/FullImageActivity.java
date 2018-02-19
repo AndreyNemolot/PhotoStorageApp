@@ -17,8 +17,10 @@ public class FullImageActivity extends AppCompatActivity {
 
     @BindView(R.id.full_image)
     ImageView image;
-    private static final int MAX_WIDTH = 3840;
-    private static final int MAX_HEIGHT = 2160;
+    /*private static final int MAX_WIDTH = 3840;
+    private static final int MAX_HEIGHT = 2160;*/
+    private static final int MAX_WIDTH = 5000;
+    private static final int MAX_HEIGHT = 3000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

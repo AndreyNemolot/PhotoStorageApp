@@ -76,8 +76,7 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.ViewHolder> 
 
         void bind(final Photo item, final PhotoAdapter.OnItemClickListener listener, final PhotoAdapter.OnLongClickListener longListener) {
 
-            String[] link = item.getPhotoLink().split("//");
-            final String name = PHOTO_PATH + link[link.length-1];
+            final String name = PHOTO_PATH + item.getPhotoLink();
 
             int size = (int) Math.ceil(Math.sqrt(MAX_WIDTH * MAX_HEIGHT));
             Picasso.with(itemView.getContext()).load(name).transform(new BitmapTransform(MAX_WIDTH, MAX_HEIGHT))

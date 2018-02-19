@@ -73,7 +73,8 @@ public class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.ViewHolder>{
             itemView.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View view) {
-                    return false;
+                    longListener.onLongClick(item);
+                    return true;
                 }
             });
         }

@@ -14,13 +14,11 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.example.nemol.googlephotokiller.Adapter.PhotoAdapter;
-import com.example.nemol.googlephotokiller.Callback.PhotoAnswerCallback;
 import com.example.nemol.googlephotokiller.Callback.PhotoControllerCallback;
 import com.example.nemol.googlephotokiller.Controller.PhotoController;
 import com.example.nemol.googlephotokiller.ImageFilePath;
@@ -33,9 +31,10 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import cz.msebera.android.httpclient.HttpStatus;
 
-public class ImagesActivity extends AppCompatActivity implements PhotoControllerCallback, PhotoAnswerCallback {
+public class ImagesActivity extends AppCompatActivity implements PhotoControllerCallback {
 
     @BindView(R.id.imageGallery)
     RecyclerView imageList;
@@ -45,6 +44,7 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
     ProgressBar progressBar;
     private List<Photo> photoList;
     private int albumId = 0;
+    private String albumTitle;
     private int PERMISSION_REQUEST_CODE = 1;
 
     @Override
@@ -52,46 +52,30 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_images);
         ButterKnife.bind(this);
-        //setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
 
         imageList.setHasFixedSize(false);
         RecyclerView.LayoutManager layoutManager = new GridLayoutManager(getApplicationContext(), 2);
         imageList.setLayoutManager(layoutManager);
 
-        PhotoController.registerProgressBarCallBack(this);
-        PhotoController.registerPhotoListCallBack(this);
+        PhotoController.registerPhotoCallBack(this);
 
-        String albumTitle = "Album";
-        if(getIntent()!=null) {
-            try {
-                albumId = (Integer) getIntent().getExtras().get("albumId");
-                albumTitle = getIntent().getExtras().getString("albumTitle");
-            } catch (NullPointerException ex) {
-                Toast.makeText(this, "Не удалось получить фотографии", Toast.LENGTH_SHORT).show();
+        albumId = (Integer) getIntent().getExtras().get("albumId");
+        albumTitle = getIntent().getExtras().getString("albumTitle");
+        getSupportActionBar().setTitle(albumTitle);
+        PhotoController.getPhotoList(albumId);
+
+
+    }
+
+    @OnClick(R.id.fab_add_photo)
+    public void uploadPhotoClick(View view) {
+            if (ContextCompat.checkSelfPermission(view.getContext(), Manifest.permission.READ_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED) {
+                getImage();
+            } else {
+                requestMultiplePermissions();
             }
-            PhotoController.getPhotoList(albumId);
-            getSupportActionBar().setTitle(albumTitle);
-        }
-
-        fabAddPhoto.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (ActiveUser.getId() >=0) {
-                    if (ContextCompat.checkSelfPermission(view.getContext(), Manifest.permission.READ_EXTERNAL_STORAGE)
-                            == PackageManager.PERMISSION_GRANTED) {
-                        getImage();
-                    }else{
-                        requestMultiplePermissions();
-                    }
-
-                } else {
-                    Snackbar.make(view, "Пользователь не авторизирован", Snackbar.LENGTH_LONG)
-                            .setAction("Action", null).show();
-                }
-            }
-        });
     }
 
     public void getImage() {
@@ -119,9 +103,9 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
 
     public void requestMultiplePermissions() {
         ActivityCompat.requestPermissions(this,
-                new String[] {
+                new String[]{
                         Manifest.permission.READ_EXTERNAL_STORAGE,
-                },PERMISSION_REQUEST_CODE);
+                }, PERMISSION_REQUEST_CODE);
     }
 
     @Override
@@ -132,12 +116,47 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
 
     @Override
     public void getPhotoList(List<Photo> list) {
+        Toast.makeText(this, "Получен список фотографий", Toast.LENGTH_LONG).show();
         photoList = list;
         PhotoController.downloadPhoto(getApplicationContext(), photoList);
         //startService(new Intent(this, DownloadPhotoService.class));
     }
 
-    void setImages() {
+    @Override
+    public void uploadPhoto(int code) {
+        if (code == HttpStatus.SC_ACCEPTED) {
+            Toast.makeText(this, "Фото загружено в альбом", Toast.LENGTH_LONG).show();
+            progressBar.setVisibility(View.GONE);
+            PhotoController.getPhotoList(albumId);
+        } else {
+            Toast.makeText(this, "Не удалось загрузить фото в альбом", Toast.LENGTH_LONG).show();
+            progressBar.setVisibility(View.GONE);
+        }
+    }
+
+    @Override
+    public void downloadPhoto(int code) {
+        if (code == HttpStatus.SC_CREATED) {
+            Toast.makeText(this, "Фото загружено на телефон", Toast.LENGTH_LONG).show();
+            progressBar.setVisibility(View.GONE);
+            setImagesList();
+        } else {
+            Toast.makeText(this, "Не удалось загрузить фото", Toast.LENGTH_LONG).show();
+            progressBar.setVisibility(View.GONE);
+        }
+    }
+
+    @Override
+    public void deletePhoto(int code) {
+        if (code == HttpStatus.SC_NO_CONTENT) {
+            Toast.makeText(this, "Фото удалено", Toast.LENGTH_LONG).show();
+            PhotoController.getPhotoList(albumId);
+        } else {
+            Toast.makeText(this, "Не удалось удалить фото", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    void setImagesList() {// TODO: 16.02.2018 вынести как в мэйне
         PhotoAdapter adapter = new PhotoAdapter(photoList, new PhotoAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(String item) {
@@ -148,8 +167,7 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
         }, new PhotoAdapter.OnLongClickListener() {
             @Override
             public void onLongClick(final Photo photo) {
-
-                final AlertDialog.Builder builder = new AlertDialog.Builder(ImagesActivity.this);
+                AlertDialog.Builder builder = new AlertDialog.Builder(ImagesActivity.this);
                 builder.setTitle("Вы уверены")
                         .setMessage("Хотите удалить эту фотографию?")
                         .setPositiveButton("Да",
@@ -170,35 +188,6 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
             }
         });
         imageList.setAdapter(adapter);
-        //adapter.notifyDataSetChanged();
     }
 
-    @Override
-    public void photoAnswer(int code) {
-        switch (code) {
-            case HttpStatus.SC_ACCEPTED:
-                Toast.makeText(this, "Фото загружено в альбом", Toast.LENGTH_LONG).show();
-                progressBar.setVisibility(View.GONE);
-                PhotoController.getPhotoList(albumId);
-                //setImages(); // TODO: 24.12.2017 если в этом альбоме
-                break;
-            case HttpStatus.SC_CREATED:
-                Toast.makeText(this, "Фото загружены на телефон", Toast.LENGTH_LONG).show();
-                progressBar.setVisibility(View.GONE);
-                setImages();
-                break;
-            case HttpStatus.SC_OK:
-                Toast.makeText(this, "Получен список фотографий", Toast.LENGTH_LONG).show();
-                break;
-            case 409:
-                Toast.makeText(this, "Не удалось загрузить фото", Toast.LENGTH_LONG).show();
-                progressBar.setVisibility(View.GONE);
-                break;
-            case HttpStatus.SC_NO_CONTENT:
-                Toast.makeText(this, "Фото удалено", Toast.LENGTH_LONG).show();
-                PhotoController.getPhotoList(albumId);
-                //setImages();
-                break;
-        }
-    }
 }

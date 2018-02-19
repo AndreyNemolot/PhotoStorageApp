@@ -10,4 +10,8 @@ import java.util.List;
 
 public interface PhotoControllerCallback {
     void getPhotoList(List<Photo> photoList);
+    void uploadPhoto(int code);
+    void downloadPhoto(int code);
+    void deletePhoto(int code);
+
 }
