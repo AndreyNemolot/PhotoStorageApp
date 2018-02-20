@@ -83,11 +83,6 @@ public class CreateAlbumDialogFragment extends DialogFragment implements AlbumCo
     }
 
     @Override
-    public void getAlbum() {
-
-    }
-
-    @Override
     public void getAlbumList(int code, ArrayList<Album> albums) {
 
     }

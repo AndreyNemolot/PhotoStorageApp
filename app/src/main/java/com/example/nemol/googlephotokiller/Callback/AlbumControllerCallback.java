@@ -12,7 +12,6 @@ import butterknife.Optional;
 
 public interface AlbumControllerCallback {
 
-    void getAlbum();
     void getAlbumList(int code, ArrayList<Album> albums);
     void addAlbum(int code);
     void deleteAlbum(int code);

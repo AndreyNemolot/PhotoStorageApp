@@ -1,23 +1,16 @@
 package com.example.nemol.googlephotokiller.Adapter;
 
-import android.content.Context;
-import android.content.DialogInterface;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
-import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import com.example.nemol.googlephotokiller.BitmapTransform;
-import com.example.nemol.googlephotokiller.Model.Album;
 import com.example.nemol.googlephotokiller.Model.Photo;
 import com.example.nemol.googlephotokiller.R;
 import com.squareup.picasso.Picasso;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -26,7 +19,7 @@ import java.util.List;
 
 public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.ViewHolder> {
 
-    private final String PHOTO_PATH = "file:///data/data/com.example.nemol.googlephotokiller/cache/";
+    private final String PHOTO_PATH = "file:///sdcard/GooglePhotoKiller/";
     private  int MAX_WIDTH = 420;
     private  int MAX_HEIGHT = 420;
 
@@ -39,7 +32,7 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.ViewHolder> 
     }
 
 
-    private List<Photo> galleryList; // TODO: 25.12.2017 передавать в адаптер фотки а не названия
+    private List<Photo> galleryList;
     private final OnItemClickListener listener;
     private final OnLongClickListener longListener;
 

@@ -47,8 +47,6 @@ public class MainActivity extends AppCompatActivity
     FloatingActionButton fabAddAlbum;
     @BindView(R.id.drawer_layout)
     DrawerLayout drawer;
-    /*@BindView(R.id.progressBarMain)
-    ProgressBar progressBar;*/
     @BindView(R.id.toolbar)
     Toolbar toolbar;
 
@@ -94,13 +92,8 @@ public class MainActivity extends AppCompatActivity
 
     @OnClick(R.id.fab_add_album)
     public void createAlbumClick(View view) {
-        if (ActiveUser.getId() > 0) {
             CreateAlbumDialogFragment create = new CreateAlbumDialogFragment();
             create.show(getFragmentManager(), "dlg3");
-        } else {
-            Snackbar.make(view, "Пользователь не авторизирован", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show();
-        }
     }
 
     public void setAlbumList(ArrayList<Album> albums) {
@@ -166,7 +159,4 @@ public class MainActivity extends AppCompatActivity
         AlbumController.getAllAlbums();
     }
 
-    @Override
-    public void getAlbum() {
-    }
 }

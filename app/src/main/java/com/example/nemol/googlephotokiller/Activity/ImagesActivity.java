@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
@@ -27,6 +28,7 @@ import com.example.nemol.googlephotokiller.Model.Photo;
 import com.example.nemol.googlephotokiller.R;
 import com.github.clans.fab.FloatingActionButton;
 
+import java.io.File;
 import java.util.List;
 
 import butterknife.BindView;
@@ -44,7 +46,6 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
     ProgressBar progressBar;
     private List<Photo> photoList;
     private int albumId = 0;
-    private String albumTitle;
     private int PERMISSION_REQUEST_CODE = 1;
 
     @Override
@@ -61,7 +62,7 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
         PhotoController.registerPhotoCallBack(this);
 
         albumId = (Integer) getIntent().getExtras().get("albumId");
-        albumTitle = getIntent().getExtras().getString("albumTitle");
+        String albumTitle = getIntent().getExtras().getString("albumTitle");
         getSupportActionBar().setTitle(albumTitle);
         PhotoController.getPhotoList(albumId);
 
@@ -115,11 +116,15 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
     }
 
     @Override
-    public void getPhotoList(List<Photo> list) {
-        Toast.makeText(this, "Получен список фотографий", Toast.LENGTH_LONG).show();
-        photoList = list;
-        PhotoController.downloadPhoto(getApplicationContext(), photoList);
-        //startService(new Intent(this, DownloadPhotoService.class));
+    public void getPhotoList(int code, List<Photo> list) {
+        if(code == HttpStatus.SC_OK) {
+            Toast.makeText(this, "Получен список фотографий", Toast.LENGTH_LONG).show();
+            photoList = list;
+            PhotoController.downloadPhoto(getApplicationContext(), photoList);
+            //startService(new Intent(this, DownloadPhotoService.class));
+        }else{
+            Toast.makeText(this, "Не удалось получить список фотографий", Toast.LENGTH_LONG).show();
+        }
     }
 
     @Override
@@ -156,7 +161,7 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
         }
     }
 
-    void setImagesList() {// TODO: 16.02.2018 вынести как в мэйне
+    void setImagesList() {
         PhotoAdapter adapter = new PhotoAdapter(photoList, new PhotoAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(String item) {

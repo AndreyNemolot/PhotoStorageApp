@@ -58,9 +58,7 @@ public class AlbumController {
             @Override
             public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
                 super.onFailure(statusCode, headers, responseString, throwable);
-                //201 created
-                //409 conflict (user exist)
-                //answerCallback.createAnswer(statusCode);
+                albumCallback.getAlbumList(statusCode, null);
             }
 
             @Override
