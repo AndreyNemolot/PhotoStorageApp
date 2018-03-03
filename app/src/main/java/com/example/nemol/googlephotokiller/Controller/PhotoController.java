@@ -1,5 +1,6 @@
 package com.example.nemol.googlephotokiller.Controller;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.os.Build;
 import android.os.Environment;
@@ -7,8 +8,8 @@ import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
-import com.example.nemol.googlephotokiller.Callback.AnswerCallback;
 import com.example.nemol.googlephotokiller.Callback.PhotoControllerCallback;
+import com.example.nemol.googlephotokiller.Model.ActiveUser;
 import com.example.nemol.googlephotokiller.Model.Photo;
 import com.example.nemol.googlephotokiller.RestClient;
 import com.google.gson.Gson;
@@ -26,9 +27,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -77,13 +75,9 @@ public class PhotoController extends AppCompatActivity {
     }
 
     public static void downloadPhoto(Context context, List<Photo> photoList) {
-// TODO: 05.12.2017 сделать сервис загрузки
-
         for (int i = 0; i < photoList.size(); i++) {
             Photo photo = photoList.get(i);
             final String name = photo.getPhotoLink();
-
-            if (!new File(EX_PHOTO_PATH + name).exists()) {
 
                 RequestParams params = new RequestParams();
                 params.put("photo_id", photo.getPhotoId());
@@ -94,23 +88,20 @@ public class PhotoController extends AppCompatActivity {
                         photoCallback.downloadPhoto(statusCode);
                     }
 
-                    @RequiresApi(api = Build.VERSION_CODES.O)
                     @Override
                     public void onSuccess(int statusCode, Header[] headers, File response) {
 
-                        response.renameTo(new File(IN_PHOTO_PATH, name)); // TODO: 20.02.2018 сделать проще
+                        response.renameTo(new File(IN_PHOTO_PATH, name));
 
                         moveFile(IN_PHOTO_PATH,
                                 name, EX_PHOTO_PATH);
                         photoCallback.downloadPhoto(statusCode);
                     }
                 });
-            }
         }
-        photoCallback.downloadPhoto(HttpStatus.SC_CREATED);
     }
 
-    private static void moveFile(String inputPath, String inputFile, String outputPath) {
+    private static void moveFile(String inputPath, String inputFile, String outputPath) { // TODO: 04.03.2018 в отдельном потоке
 
         InputStream in;
         OutputStream out;
@@ -128,11 +119,8 @@ public class PhotoController extends AppCompatActivity {
                 out.write(buffer, 0, read);
             }
             in.close();
-            in = null;
-
             out.flush();
             out.close();
-            out = null;
 
             new File(inputPath + inputFile).delete();
         } catch (Exception e) {
@@ -155,23 +143,19 @@ public class PhotoController extends AppCompatActivity {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONArray timeline) {
                 super.onSuccess(statusCode, headers, timeline);
-                try {
-                    for (int i = 0; i < timeline.length(); i++) {
-                        Photo object = new Gson().fromJson(timeline.getJSONObject(i).toString(), Photo.class);
-                        list.add(object);
-                    }
-                    photoCallback.getPhotoList(statusCode, list);
-                } catch (JSONException e) {
-                    System.out.println(e.getMessage());
-                }
+                photoCallback.getPhotoList(statusCode, timeline);
             }
         });
     }
 
-    public static void deletePhoto(Photo photo) {
+    public static void deletePhoto(Photo photo, Context context) {
         new File(File.separator + EX_PHOTO_PATH + photo.getPhotoLink()).delete();
         RequestParams params = new RequestParams();
         params.put("photo_id", photo.getPhotoId());
+
+        ContentValues values = new ContentValues();
+        values.put("_id", photo.getPhotoId());
+        new DBController(context).deletePhoto(values);
         RestClient.delete(PHOTO_URL, params, new JsonHttpResponseHandler() {
 
             @Override

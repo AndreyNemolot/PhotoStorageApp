@@ -1,10 +1,13 @@
 package com.example.nemol.googlephotokiller.Activity;
 
 import android.app.AlertDialog;
+import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Bundle;
-import android.support.design.widget.Snackbar;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
@@ -17,20 +20,25 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 
-import com.example.nemol.googlephotokiller.Adapter.AlbumAdapter;
+import com.example.nemol.googlephotokiller.Adapter.AlbumListCursorAdapter;
 import com.example.nemol.googlephotokiller.Callback.AlbumControllerCallback;
 import com.example.nemol.googlephotokiller.Controller.AlbumController;
-import com.example.nemol.googlephotokiller.Controller.PhotoController;
+import com.example.nemol.googlephotokiller.Controller.DBController;
+import com.example.nemol.googlephotokiller.ServerDoneEvent;
+import com.example.nemol.googlephotokiller.Service.DBAlbumService;
 import com.example.nemol.googlephotokiller.Fragment.CreateAlbumDialogFragment;
 import com.example.nemol.googlephotokiller.Model.ActiveUser;
 import com.example.nemol.googlephotokiller.Model.Album;
-import com.example.nemol.googlephotokiller.Controller.PreferencesController;
+import com.example.nemol.googlephotokiller.PhotoStoreDBHelper;
 import com.example.nemol.googlephotokiller.R;
 
 import com.github.clans.fab.FloatingActionButton;
 
 
-import java.util.ArrayList;
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+import org.json.JSONArray;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -49,6 +57,8 @@ public class MainActivity extends AppCompatActivity
     DrawerLayout drawer;
     @BindView(R.id.toolbar)
     Toolbar toolbar;
+    private String INTENT_MESSAGE = "jsonArray";
+    private AlbumListCursorAdapter cursorAdapter;
 
 
     @Override
@@ -58,14 +68,27 @@ public class MainActivity extends AppCompatActivity
         ButterKnife.bind(this);
         setSupportActionBar(toolbar);
 
-        CreateAlbumDialogFragment.registerAlbumCallBack(this);
-        AlbumController.registerAlbumCallBack(this);
+
+        AlbumController.getAllAlbums();
 
         albumList.setHasFixedSize(false);
         RecyclerView.LayoutManager layoutManager = new GridLayoutManager(getApplicationContext(), 2);
         albumList.setLayoutManager(layoutManager);
 
-        AlbumController.getAllAlbums();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        EventBus.getDefault().register(this);
+        CreateAlbumDialogFragment.registerAlbumCallBack(this);
+        AlbumController.registerAlbumCallBack(this);
+    }
+
+    @Override
+    protected void onStop() {
+        EventBus.getDefault().unregister(this);
+        super.onStop();
     }
 
     @Override
@@ -77,11 +100,13 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        PreferencesController preferences = new PreferencesController();
+
         switch (item.getItemId()) {
             case R.id.action_logout:
+                ContentValues userValues = new ContentValues();
+                userValues.put("_id", Integer.toString(ActiveUser.getId()));
+                new DBController(this).deleteUser(userValues);
                 ActiveUser.isAuth(false);
-                preferences.saveUser(getApplicationContext());
                 startActivity(new Intent(this, LoginActivity.class));
                 finish();
                 return true;
@@ -96,22 +121,32 @@ public class MainActivity extends AppCompatActivity
             create.show(getFragmentManager(), "dlg3");
     }
 
-    public void setAlbumList(ArrayList<Album> albums) {
-        AlbumAdapter adapter = new AlbumAdapter(albums, new AlbumAdapter.OnItemClickListener() {
+    public Cursor getCursor(){
+        SQLiteOpenHelper DBHelper = new PhotoStoreDBHelper(this);
+        SQLiteDatabase db = DBHelper.getReadableDatabase();
+        return db.query("ALBUMS", new String[]{"_id", "ALBUM_TITLE"},
+                "USER_ID = ?", new String[]{Integer.toString(ActiveUser.getId())},
+                null, null, null);
+    }
+
+    public void setAlbumList() {
+        cursorAdapter = new AlbumListCursorAdapter(this, getCursor());
+        cursorAdapter.setListener(new AlbumListCursorAdapter.Listener() {
             @Override
-            public void onItemClick(Album item) {
-                openImagesActivity(item);
+            public void onClick(Album album) {
+                openImagesActivity(album);
             }
-        }, new AlbumAdapter.OnLongClickListener() {
+
             @Override
-            public void onLongClick(final Album item) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+            public void onLongClick(final Album album) {
+                final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                 builder.setTitle("Вы уверены")
                         .setMessage("Хотите удалить альбом и все фотографии в нём?")
                         .setPositiveButton("Да",
                                 new DialogInterface.OnClickListener() {
                                     public void onClick(DialogInterface dialog, int id) {
-                                        AlbumController.deleteAlbum(item.getAlbumId());
+
+                                        AlbumController.deleteAlbum(album.getAlbumId(), builder.getContext());
                                     }
                                 })
                         .setNegativeButton("Нет",
@@ -125,21 +160,35 @@ public class MainActivity extends AppCompatActivity
                 alert.show();
             }
         });
-        albumList.setAdapter(adapter);
+        albumList.setAdapter(cursorAdapter);
+        //cursor.close();
+        //db.close();
     }
 
-    public void openImagesActivity(Album item) {
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEvent(ServerDoneEvent event){
+        if(event.getState()){
+            setAlbumList();
+        }else{
+            Toast.makeText(this, "Не удалось получить список альбомов", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    public void openImagesActivity(Album album) {
         Intent intent = new Intent(this, ImagesActivity.class);
-        intent.putExtra("albumId", item.getAlbumId());
-        intent.putExtra("albumTitle", item.getAlbumTitle());
+        intent.putExtra("albumId", album.getAlbumId());
+        intent.putExtra("albumTitle", album.getAlbumTitle());
         startActivity(intent);
     }
 
     @Override
-    public void getAlbumList(int code, ArrayList<Album> albums) {
+    public void getAlbumList(int code, JSONArray albums) {
         if (code == HttpStatus.SC_OK) {
+            Intent intent = new Intent(this, DBAlbumService.class);
+            intent.putExtra(INTENT_MESSAGE,albums.toString());
+            startService(intent);
+
             Toast.makeText(this, "Получен список альбомов", Toast.LENGTH_LONG).show();
-            setAlbumList(albums);
         } else {
             Toast.makeText(this, "Не удалось получить список альбомов", Toast.LENGTH_LONG).show();
         }
@@ -147,7 +196,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void addAlbum(int code) {
-        Toast.makeText(this, "!!!!!", Toast.LENGTH_LONG).show();
+        Toast.makeText(this, "Альбом добавлен", Toast.LENGTH_LONG).show();
         AlbumController.registerAlbumCallBack(this);
         AlbumController.getAllAlbums();
     }
@@ -155,8 +204,9 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void deleteAlbum(int code) {
         Toast.makeText(this, "Альбом удалён", Toast.LENGTH_LONG).show();
-        AlbumController.registerAlbumCallBack(this);
-        AlbumController.getAllAlbums();
+        //AlbumController.registerAlbumCallBack(this);
+        //AlbumController.getAllAlbums();
+        cursorAdapter.changeCursor(getCursor());
     }
 
 }

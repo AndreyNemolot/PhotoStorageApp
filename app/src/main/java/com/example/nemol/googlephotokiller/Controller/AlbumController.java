@@ -1,10 +1,11 @@
 package com.example.nemol.googlephotokiller.Controller;
 
 
+import android.content.ContentValues;
+import android.content.Context;
+
 import com.example.nemol.googlephotokiller.Callback.AlbumControllerCallback;
-import com.example.nemol.googlephotokiller.Callback.PhotoControllerCallback;
 import com.example.nemol.googlephotokiller.Model.ActiveUser;
-import com.example.nemol.googlephotokiller.Model.Album;
 import com.example.nemol.googlephotokiller.Model.Photo;
 import com.example.nemol.googlephotokiller.RestClient;
 import com.google.gson.Gson;
@@ -13,11 +14,8 @@ import com.loopj.android.http.RequestParams;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 import cz.msebera.android.httpclient.Header;
 
@@ -63,25 +61,20 @@ public class AlbumController {
 
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONArray timeline) {
-                ArrayList<Album> list = new ArrayList<>();
-                try {
-                    for (int i = 0; i < timeline.length(); i++) {
-                        Gson gson = new Gson();
-                        Album object = gson.fromJson(timeline.getJSONObject(i).toString(), Album.class);
-                        list.add(object);
-                    }
-                } catch (JSONException e) {
-                    System.out.println(e.getMessage());
-                }
-                albumCallback.getAlbumList(statusCode, list);
+                albumCallback.getAlbumList(statusCode, timeline);
             }
         });
     }
 
-    public static void deleteAlbum(int albumId) {
+    public static void deleteAlbum(int albumId, Context context) {
         RequestParams params = new RequestParams();
         params.put("user_id", ActiveUser.getId());
         params.put("album_id", albumId);
+
+        ContentValues values = new ContentValues();
+        values.put("_id", albumId);
+        new DBController(context).deleteAlbum(values);
+
         RestClient.delete(ALBUM_URL, params, new JsonHttpResponseHandler() {
 
                     @Override
@@ -97,7 +90,6 @@ public class AlbumController {
                             System.out.println(e.getMessage());
                         }
                     }
-
 
 
                 }

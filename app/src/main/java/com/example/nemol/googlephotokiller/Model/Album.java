@@ -1,5 +1,7 @@
 package com.example.nemol.googlephotokiller.Model;
 
+import android.database.Cursor;
+
 /**
  * Created by nemol on 11.12.2017.
  */
@@ -15,9 +17,14 @@ public class Album {
         return albumTitle;
     }
 
-    public Album(int id, String title){
-        this.userId = id;
-        this.albumTitle = title;
+    public Album(){
+
+    }
+
+    public static Album fromCursor(Cursor cursor) {
+        Album listItem = new Album();
+        listItem.setAlbumTitle(cursor.getString(cursor.getColumnIndex("ALBUM_TITLE")));
+        return listItem;
     }
 
     public int getAlbumId() {
@@ -40,4 +47,7 @@ public class Album {
         this.albumTitle = albumTitle;
     }
 
+    public void setAlbumId(int albumId) {
+        this.albumId = albumId;
+    }
 }

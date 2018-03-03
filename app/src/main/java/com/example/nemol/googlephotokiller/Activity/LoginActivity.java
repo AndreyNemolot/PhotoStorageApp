@@ -4,8 +4,13 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
+import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.support.v7.app.AppCompatActivity;
 
 import android.os.Build;
@@ -19,10 +24,10 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.example.nemol.googlephotokiller.Callback.UserControllerCallback;
+import com.example.nemol.googlephotokiller.Controller.DBController;
 import com.example.nemol.googlephotokiller.Controller.UserController;
 import com.example.nemol.googlephotokiller.Model.ActiveUser;
 import com.example.nemol.googlephotokiller.Model.User;
-import com.example.nemol.googlephotokiller.Controller.PreferencesController;
 import com.example.nemol.googlephotokiller.R;
 
 import butterknife.BindView;
@@ -54,8 +59,7 @@ public class LoginActivity extends AppCompatActivity implements UserControllerCa
         UserController.registerCallBack(this);
         ButterKnife.bind(this);
 
-        PreferencesController preferences = new PreferencesController();
-        if(preferences.loadText(getApplicationContext())){
+        if(new DBController(this).loadUser()){
             showProgress(true);
             UserController.authorization();
         }
@@ -166,8 +170,13 @@ public class LoginActivity extends AppCompatActivity implements UserControllerCa
     @Override
     public void userAction(int code) {
         if (code == HttpStatus.SC_OK){
-            PreferencesController preferences = new PreferencesController();
-            preferences.saveUser(getApplicationContext());
+            ContentValues userValues = new ContentValues();
+            userValues.put("_id", Integer.toString(ActiveUser.getId()));
+            userValues.put("LOGIN", ActiveUser.getLogin());
+            userValues.put("PASSWORD", ActiveUser.getPassword());
+            new DBController(this).saveUser(userValues);
+
+
             Toast.makeText(this, "Пользователь авторизован", Toast.LENGTH_LONG).show();
             startActivity(new Intent(this, MainActivity.class));
             finish();

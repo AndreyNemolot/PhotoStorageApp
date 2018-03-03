@@ -2,6 +2,8 @@ package com.example.nemol.googlephotokiller.Callback;
 
 import com.example.nemol.googlephotokiller.Model.Photo;
 
+import org.json.JSONArray;
+
 import java.util.List;
 
 /**
@@ -9,7 +11,7 @@ import java.util.List;
  */
 
 public interface PhotoControllerCallback {
-    void getPhotoList(int code, List<Photo> photoList);
+    void getPhotoList(int code, JSONArray timeline);
     void uploadPhoto(int code);
     void downloadPhoto(int code);
     void deletePhoto(int code);

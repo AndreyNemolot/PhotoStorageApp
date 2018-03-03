@@ -1,5 +1,7 @@
 package com.example.nemol.googlephotokiller.Model;
 
+import android.database.Cursor;
+
 /**
  * Created by nemol on 23.12.2017.
  */
@@ -14,6 +16,13 @@ public class Photo {
         this.photoId = photoId;
         this.albumId = albumId;
         this.photoLink = photoLink;
+    }
+    public Photo(){}
+
+    public static Photo fromCursor(Cursor cursor) {
+        Photo listItem = new Photo();
+        listItem.setPhotoLink(cursor.getString(cursor.getColumnIndex("PHOTO_LINK")));
+        return listItem;
     }
 
     public int getPhotoId() {

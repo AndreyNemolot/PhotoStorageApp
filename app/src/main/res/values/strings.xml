@@ -34,4 +34,6 @@
         completions."
     </string>
     <string name="title_activity_images">ImagesActivity</string>
+    <string name="photo_path">file:///sdcard/GooglePhotoKiller/</string>
+
 </resources>

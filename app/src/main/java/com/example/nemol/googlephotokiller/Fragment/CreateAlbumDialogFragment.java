@@ -1,6 +1,7 @@
 package com.example.nemol.googlephotokiller.Fragment;
 
 import android.app.DialogFragment;
+import android.content.ContentValues;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,8 +12,11 @@ import android.widget.TextView;
 
 import com.example.nemol.googlephotokiller.Callback.AlbumControllerCallback;
 import com.example.nemol.googlephotokiller.Controller.AlbumController;
+import com.example.nemol.googlephotokiller.Controller.DBController;
 import com.example.nemol.googlephotokiller.Model.Album;
 import com.example.nemol.googlephotokiller.R;
+
+import org.json.JSONArray;
 
 import java.util.ArrayList;
 
@@ -83,7 +87,7 @@ public class CreateAlbumDialogFragment extends DialogFragment implements AlbumCo
     }
 
     @Override
-    public void getAlbumList(int code, ArrayList<Album> albums) {
+    public void getAlbumList(int code,JSONArray albums) {
 
     }
 

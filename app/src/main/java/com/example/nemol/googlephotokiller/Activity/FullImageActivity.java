@@ -28,11 +28,11 @@ public class FullImageActivity extends AppCompatActivity {
         setContentView(R.layout.activity_full_image);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         ButterKnife.bind(this);
+        // TODO: 03.03.2018 добавить share
 
-        Intent i =getIntent();
-        String url = i.getStringExtra("url");
+        String photoLink = getIntent().getStringExtra("photoLink");
         int size = (int) Math.ceil(Math.sqrt(MAX_WIDTH * MAX_HEIGHT));
-        Picasso.with(this).load(url).transform(new BitmapTransform(MAX_WIDTH, MAX_HEIGHT))
+        Picasso.with(this).load(photoLink).transform(new BitmapTransform(MAX_WIDTH, MAX_HEIGHT))
                 .resize(size, size)
                 .centerInside().into(image);
     }
