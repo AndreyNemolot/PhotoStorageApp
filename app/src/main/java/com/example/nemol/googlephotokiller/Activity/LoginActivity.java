@@ -128,7 +128,7 @@ public class LoginActivity extends AppCompatActivity implements UserControllerCa
         } else {
             showProgress(true);
             if(isLogin){
-                ActiveUser.saveUser(login, password);
+                ActiveUser.saveUser(login, password, true);
                 UserController.authorization();
             }else{
                 UserController.registration(new User(login, password));
@@ -181,8 +181,16 @@ public class LoginActivity extends AppCompatActivity implements UserControllerCa
             startActivity(new Intent(this, MainActivity.class));
             finish();
         }else{
+            ContentValues userValues = new ContentValues();
+            userValues.put("LOGIN", ActiveUser.getLogin());
+            userValues.put("PASSWORD", ActiveUser.getPassword());
+            if(new DBController(this).loadUserByLogin(userValues)){
+                startActivity(new Intent(this, MainActivity.class));
+                finish();
+            }else{
+                Toast.makeText(this, "Что то пошло не так", Toast.LENGTH_LONG).show();
+            }
             showProgress(false);
-            Toast.makeText(this, "Что то пошло не так", Toast.LENGTH_LONG).show();
         }
     }
 

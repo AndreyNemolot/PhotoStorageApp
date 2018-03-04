@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.os.Build;
 import android.os.Environment;
+import android.os.Handler;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -79,54 +80,56 @@ public class PhotoController extends AppCompatActivity {
             Photo photo = photoList.get(i);
             final String name = photo.getPhotoLink();
 
-                RequestParams params = new RequestParams();
-                params.put("photo_id", photo.getPhotoId());
+            RequestParams params = new RequestParams();
+            params.put("photo_id", photo.getPhotoId());
 
-                RestClient.get(PHOTO_URL, params, new FileAsyncHttpResponseHandler(context) {
-                    @Override
-                    public void onFailure(int statusCode, Header[] headers, Throwable throwable, File file) {
-                        photoCallback.downloadPhoto(statusCode);
-                    }
+            RestClient.get(PHOTO_URL, params, new FileAsyncHttpResponseHandler(context) {
+                @Override
+                public void onFailure(int statusCode, Header[] headers, Throwable throwable, File file) {
+                    photoCallback.downloadPhoto(statusCode);
+                }
 
-                    @Override
-                    public void onSuccess(int statusCode, Header[] headers, File response) {
-
-                        response.renameTo(new File(IN_PHOTO_PATH, name));
-
-                        moveFile(IN_PHOTO_PATH,
-                                name, EX_PHOTO_PATH);
-                        photoCallback.downloadPhoto(statusCode);
-                    }
-                });
+                @Override
+                public void onSuccess(int statusCode, Header[] headers, File response) {
+                    response.renameTo(new File(IN_PHOTO_PATH, name));
+                    moveFile(IN_PHOTO_PATH,
+                            name, EX_PHOTO_PATH);
+                    photoCallback.downloadPhoto(statusCode);
+                }
+            });
         }
     }
 
-    private static void moveFile(String inputPath, String inputFile, String outputPath) { // TODO: 04.03.2018 в отдельном потоке
+    private static void moveFile(final String inputPath, final String inputFile, final String outputPath) {
+        final Handler handler = new Handler();
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                InputStream in;
+                OutputStream out;
+                try {
+                    File dir = new File(outputPath);
+                    if (!dir.exists()) {
+                        dir.mkdirs();
+                    }
+                    in = new FileInputStream(inputPath + inputFile);
+                    out = new FileOutputStream(outputPath + inputFile);
 
-        InputStream in;
-        OutputStream out;
-        try {
-            File dir = new File(outputPath);
-            if (!dir.exists()) {
-                dir.mkdirs();
+                    byte[] buffer = new byte[1024];
+                    int read;
+                    while ((read = in.read(buffer)) != -1) {
+                        out.write(buffer, 0, read);
+                    }
+                    in.close();
+                    out.flush();
+                    out.close();
+
+                    new File(inputPath + inputFile).delete();
+                } catch (Exception e) {
+                    Log.e("tag", e.getMessage());
+                }
             }
-            in = new FileInputStream(inputPath + inputFile);
-            out = new FileOutputStream(outputPath + inputFile);
-
-            byte[] buffer = new byte[1024];
-            int read;
-            while ((read = in.read(buffer)) != -1) {
-                out.write(buffer, 0, read);
-            }
-            in.close();
-            out.flush();
-            out.close();
-
-            new File(inputPath + inputFile).delete();
-        } catch (Exception e) {
-            Log.e("tag", e.getMessage());
-        }
-
+        });
     }
 
     public static void getPhotoList(int album) {

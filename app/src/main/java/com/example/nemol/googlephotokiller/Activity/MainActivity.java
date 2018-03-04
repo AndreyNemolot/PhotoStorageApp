@@ -68,8 +68,11 @@ public class MainActivity extends AppCompatActivity
         ButterKnife.bind(this);
         setSupportActionBar(toolbar);
 
-
-        AlbumController.getAllAlbums();
+        if(ActiveUser.isOnline()) {
+            AlbumController.getAllAlbums();
+        }else{
+            setAlbumList();
+        }
 
         albumList.setHasFixedSize(false);
         RecyclerView.LayoutManager layoutManager = new GridLayoutManager(getApplicationContext(), 2);
@@ -80,14 +83,18 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onStart() {
         super.onStart();
-        EventBus.getDefault().register(this);
-        CreateAlbumDialogFragment.registerAlbumCallBack(this);
-        AlbumController.registerAlbumCallBack(this);
+        if(ActiveUser.isOnline()) {
+            EventBus.getDefault().register(this);
+            CreateAlbumDialogFragment.registerAlbumCallBack(this);
+            AlbumController.registerAlbumCallBack(this);
+        }
     }
 
     @Override
     protected void onStop() {
-        EventBus.getDefault().unregister(this);
+        if(ActiveUser.isOnline()) {
+            EventBus.getDefault().unregister(this);
+        }
         super.onStop();
     }
 
@@ -100,7 +107,6 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-
         switch (item.getItemId()) {
             case R.id.action_logout:
                 ContentValues userValues = new ContentValues();
@@ -117,8 +123,12 @@ public class MainActivity extends AppCompatActivity
 
     @OnClick(R.id.fab_add_album)
     public void createAlbumClick(View view) {
+        if(ActiveUser.isOnline()) {
             CreateAlbumDialogFragment create = new CreateAlbumDialogFragment();
             create.show(getFragmentManager(), "dlg3");
+        }else{
+            Toast.makeText(this, "Нужно подключение к серверу", Toast.LENGTH_LONG).show();
+        }
     }
 
     public Cursor getCursor(){
@@ -139,25 +149,27 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onLongClick(final Album album) {
-                final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                builder.setTitle("Вы уверены")
-                        .setMessage("Хотите удалить альбом и все фотографии в нём?")
-                        .setPositiveButton("Да",
-                                new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int id) {
+                if(ActiveUser.isOnline()) {
+                    final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                    builder.setTitle("Вы уверены")
+                            .setMessage("Хотите удалить альбом и все фотографии в нём?")
+                            .setPositiveButton("Да",
+                                    new DialogInterface.OnClickListener() {
+                                        public void onClick(DialogInterface dialog, int id) {
 
-                                        AlbumController.deleteAlbum(album.getAlbumId(), builder.getContext());
-                                    }
-                                })
-                        .setNegativeButton("Нет",
-                                new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int id) {
-                                        dialog.cancel();
-                                    }
-                                });
+                                            AlbumController.deleteAlbum(album.getAlbumId(), builder.getContext());
+                                        }
+                                    })
+                            .setNegativeButton("Нет",
+                                    new DialogInterface.OnClickListener() {
+                                        public void onClick(DialogInterface dialog, int id) {
+                                            dialog.cancel();
+                                        }
+                                    });
 
-                AlertDialog alert = builder.create();
-                alert.show();
+                    AlertDialog alert = builder.create();
+                    alert.show();
+                }
             }
         });
         albumList.setAdapter(cursorAdapter);

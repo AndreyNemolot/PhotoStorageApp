@@ -74,7 +74,31 @@ public class DBController {
                     null, null, null, null, null);
             if (cursor.moveToFirst()) {
                 ActiveUser.saveUser(cursor.getInt(0),
-                        cursor.getString(1), cursor.getString(2));
+                        cursor.getString(1), cursor.getString(2), true);
+                cursor.close();
+                db.close();
+                return true;
+            }else {
+                db.close();
+                cursor.close();
+                return false;
+            }
+        } catch (SQLException e) {
+            db.close();
+            Toast.makeText(context, "Ошибка базы данных", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+    }
+
+    public boolean loadUserByLogin(ContentValues userValues) {
+        SQLiteDatabase db = DBHelper.getReadableDatabase();
+        try {
+            Cursor cursor = db.query("USER", new String[]{"_id", "LOGIN", "PASSWORD"},
+                    "LOGIN = ? and PASSWORD = ?", new String[]{userValues.getAsString("LOGIN"),
+                            userValues.getAsString("PASSWORD")}, null, null, null);
+            if (cursor.moveToFirst()) {
+                ActiveUser.saveUser(cursor.getInt(0),
+                        cursor.getString(1), cursor.getString(2), false);
                 cursor.close();
                 db.close();
                 return true;

@@ -9,15 +9,18 @@ public class ActiveUser{
     private static String login;
     private static String password;
     private static int id;
+    private static boolean isOnline;
 
-    public static void saveUser(String login, String password){
+    public static void saveUser(String login, String password, boolean isOnline){
         ActiveUser.login = login;
         ActiveUser.password = password;
+        ActiveUser.isOnline = isOnline;
     }
-    public static void saveUser(int id, String login, String password){
+    public static void saveUser(int id, String login, String password, boolean isOnline){
         ActiveUser.id = id;
         ActiveUser.login = login;
         ActiveUser.password = password;
+        ActiveUser.isOnline = isOnline;
     }
 
 
@@ -37,11 +40,11 @@ public class ActiveUser{
         return password;
     }
 
-    /*public static void setLogin(String login) {
-        ActiveUser.login = login;
+    public static boolean isOnline() {
+        return ActiveUser.isOnline;
     }
 
-    public static void setPassword(String password) {
+   /*public static void setPassword(String password) {
         ActiveUser.password = password;
     }*/
 

@@ -24,6 +24,7 @@ import com.example.nemol.googlephotokiller.Adapter.PhotoListCursorAdapter;
 import com.example.nemol.googlephotokiller.Callback.PhotoControllerCallback;
 import com.example.nemol.googlephotokiller.Controller.PhotoController;
 import com.example.nemol.googlephotokiller.ImageFilePath;
+import com.example.nemol.googlephotokiller.Model.ActiveUser;
 import com.example.nemol.googlephotokiller.Model.Photo;
 import com.example.nemol.googlephotokiller.PhotoListEvent;
 import com.example.nemol.googlephotokiller.PhotoStoreDBHelper;
@@ -53,7 +54,7 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
     private int albumId = 0;
     private int PERMISSION_REQUEST_CODE = 1;
     private String INTENT_MESSAGE = "jsonArray";
-    PhotoListCursorAdapter cursorAdapter;
+    private PhotoListCursorAdapter cursorAdapter;
 
 
     @Override
@@ -72,38 +73,54 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
 
         getSupportActionBar().setTitle(albumTitle);
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
-                == PackageManager.PERMISSION_GRANTED) {
-            //getImage();
-        } else {
+        if (!(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED)) {
             requestMultiplePermissions();
         }
-        PhotoController.getPhotoList(albumId);
+        if (ActiveUser.isOnline()) {
+            PhotoController.getPhotoList(albumId);
+        }
         setImagesList();
 
+    }
+
+    public void requestMultiplePermissions() {
+        ActivityCompat.requestPermissions(this,
+                new String[]{
+                        Manifest.permission.READ_EXTERNAL_STORAGE,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                }, PERMISSION_REQUEST_CODE);
+
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        EventBus.getDefault().register(this);
-        PhotoController.registerPhotoCallBack(this);
-
+        if (ActiveUser.isOnline()) {
+            EventBus.getDefault().register(this);
+            PhotoController.registerPhotoCallBack(this);
+        }
     }
 
     @Override
     protected void onStop() {
-        EventBus.getDefault().unregister(this);
+        if (ActiveUser.isOnline()) {
+            EventBus.getDefault().unregister(this);
+        }
         super.onStop();
     }
 
     @OnClick(R.id.fab_add_photo)
     public void uploadPhotoClick(View view) {
-        if (ContextCompat.checkSelfPermission(view.getContext(), Manifest.permission.READ_EXTERNAL_STORAGE)
-                == PackageManager.PERMISSION_GRANTED) {
-            getImage();
+        if (ActiveUser.isOnline()) {
+                getImage();
         } else {
-            requestMultiplePermissions();
+            Toast.makeText(this, "Нужно подключение к серверу", Toast.LENGTH_LONG).show();
         }
     }
 
@@ -130,24 +147,11 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
         super.onActivityResult(requestCode, resultCode, data);
     }
 
-    public void requestMultiplePermissions() {
-        ActivityCompat.requestPermissions(this,
-                new String[]{
-                        Manifest.permission.READ_EXTERNAL_STORAGE,
-                }, PERMISSION_REQUEST_CODE);
-
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEvent(PhotoListEvent event) {
+        cursorAdapter.changeCursor(getCursor());
         PhotoController.downloadPhoto(this, event.getPhotoList());
-        //cursorAdapter.changeCursor(getCursor());
-
     }
 
 
@@ -158,7 +162,7 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
             Intent intent = new Intent(this, DBPhotoService.class);
             intent.putExtra(INTENT_MESSAGE, photos.toString());
             startService(intent);
-
+            cursorAdapter.changeCursor(getCursor());
             Toast.makeText(this, "Получен список фотографий", Toast.LENGTH_LONG).show();
 
         } else {
@@ -221,25 +225,27 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
 
             @Override
             public void onLongClick(final Photo photo) {
-                final AlertDialog.Builder builder = new AlertDialog.Builder(ImagesActivity.this);
-                builder.setTitle("Вы уверены")
-                        .setMessage("Хотите удалить фотографию?")
-                        .setPositiveButton("Да",
-                                new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int id) {
+                if (ActiveUser.isOnline()) {
+                    final AlertDialog.Builder builder = new AlertDialog.Builder(ImagesActivity.this);
+                    builder.setTitle("Вы уверены")
+                            .setMessage("Хотите удалить фотографию?")
+                            .setPositiveButton("Да",
+                                    new DialogInterface.OnClickListener() {
+                                        public void onClick(DialogInterface dialog, int id) {
 
-                                        PhotoController.deletePhoto(photo, builder.getContext());
-                                    }
-                                })
-                        .setNegativeButton("Нет",
-                                new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int id) {
-                                        dialog.cancel();
-                                    }
-                                });
+                                            PhotoController.deletePhoto(photo, builder.getContext());
+                                        }
+                                    })
+                            .setNegativeButton("Нет",
+                                    new DialogInterface.OnClickListener() {
+                                        public void onClick(DialogInterface dialog, int id) {
+                                            dialog.cancel();
+                                        }
+                                    });
 
-                AlertDialog alert = builder.create();
-                alert.show();
+                    AlertDialog alert = builder.create();
+                    alert.show();
+                }
             }
         });
         imageList.setAdapter(cursorAdapter);

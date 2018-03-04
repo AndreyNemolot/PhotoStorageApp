@@ -30,14 +30,19 @@ public class UserController {
         callback = clb;
     }
 
-    public static void registration(User usr) {
-        RestClient.registration(USER_URL, setParams(usr), new JsonHttpResponseHandler() {
+    public static void registration(User user) {
+        RequestParams params = new RequestParams();
+        params.put("user_id", "100");
+        params.put("login", user.getLogin());
+        params.put("enabled", user.getEnabled());
+        params.put("role", user.getRole());
+        params.put("password", user.getPassword());
+
+        RestClient.registration(USER_URL, params, new JsonHttpResponseHandler() {
             @Override
             public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
                 super.onFailure(statusCode, headers, responseString, throwable);
                 callback.userAction(statusCode);
-                //201 created
-                //409 conflict (user exist)
             }
         });
     }
@@ -70,15 +75,5 @@ public class UserController {
                 }
             }
         });
-    }
-
-    private static RequestParams setParams(User user) {
-        RequestParams params = new RequestParams();
-        params.put("user_id", "100");
-        params.put("login", user.getLogin());
-        params.put("enabled", user.getEnabled());
-        params.put("role", user.getRole());
-        params.put("password", user.getPassword());
-        return params;
     }
 }

@@ -28,6 +28,7 @@ public class RestClient {
     }
 
     public static void authorization(String login, String password, String url, RequestParams params, AsyncHttpResponseHandler responseHandler) {
+        client.setConnectTimeout(5000);
         client.setBasicAuth(login, password);
         client.get(getAbsoluteUrl(url), params, responseHandler);
     }
