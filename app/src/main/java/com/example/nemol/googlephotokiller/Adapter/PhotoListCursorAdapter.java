@@ -2,6 +2,7 @@ package com.example.nemol.googlephotokiller.Adapter;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.os.Environment;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -14,6 +15,8 @@ import com.example.nemol.googlephotokiller.Model.Photo;
 import com.example.nemol.googlephotokiller.R;
 import com.squareup.picasso.Picasso;
 
+import java.io.File;
+
 /**
  * Created by nemol on 02.03.2018.
  */
@@ -22,6 +25,7 @@ public class PhotoListCursorAdapter extends CursorRecyclerViewAdapter<PhotoListC
 
     private PhotoListCursorAdapter.Listener listener;
     private final String PHOTO_PATH = "file:///sdcard/GooglePhotoKiller/";
+    private final String EX_PHOTO_PATH = Environment.getExternalStorageDirectory() + File.separator + "GooglePhotoKiller/";
     private  int MAX_WIDTH = 420;
     private  int MAX_HEIGHT = 420;
 
@@ -65,7 +69,7 @@ public class PhotoListCursorAdapter extends CursorRecyclerViewAdapter<PhotoListC
         CardView cardView = viewHolder.cardView;
         Photo myListItem = Photo.fromCursor(cursor);
 
-        final String name = myListItem.getPhotoLink();
+        final String name = PHOTO_PATH + myListItem.getPhotoLink();
         int size = (int) Math.ceil(Math.sqrt(MAX_WIDTH * MAX_HEIGHT));
         Picasso.with(viewHolder.imageView.getContext()).load(name).transform(new BitmapTransform(MAX_WIDTH, MAX_HEIGHT))
                 .resize(size, size).centerCrop()
@@ -89,7 +93,7 @@ public class PhotoListCursorAdapter extends CursorRecyclerViewAdapter<PhotoListC
                 if (listener != null) {
                     listener.onLongClick(photo);
                 }
-                return false;
+                return true;
             }
         });
     }

@@ -10,6 +10,7 @@ import android.widget.Toast;
 
 import com.example.nemol.googlephotokiller.Model.ActiveUser;
 import com.example.nemol.googlephotokiller.Model.Album;
+import com.example.nemol.googlephotokiller.Model.Photo;
 import com.example.nemol.googlephotokiller.PhotoStoreDBHelper;
 
 /**
@@ -27,7 +28,11 @@ public class DBController {
 
     }
 
-    public boolean saveUser(ContentValues userValues) {
+    public boolean addUser() {
+        ContentValues userValues = new ContentValues();
+        userValues.put("_id", Integer.toString(ActiveUser.getId()));
+        userValues.put("LOGIN", ActiveUser.getLogin());
+        userValues.put("PASSWORD", ActiveUser.getPassword());
         SQLiteDatabase db = DBHelper.getReadableDatabase();
         try {
             Cursor cursor = db.query("USER", new String[]{"_id"},
@@ -35,7 +40,7 @@ public class DBController {
             if (cursor.moveToFirst()) {
                 db.update("USER", userValues, "_id=?",
                         new String[]{Integer.toString(cursor.getInt(0))});
-            }else {
+            } else {
                 db.insert("USER", null, userValues);
             }
             cursor.close();
@@ -48,14 +53,16 @@ public class DBController {
         }
     }
 
-    public boolean deleteUser(ContentValues userValues) {
+    public boolean deleteUser() {
+        ContentValues userValues = new ContentValues();
+        userValues.put("_id", Integer.toString(ActiveUser.getId()));
         SQLiteDatabase db = DBHelper.getReadableDatabase();
         try {
             Cursor cursor = db.query("USER", new String[]{"_id"},
                     null, null, null, null, null);
             if (cursor.moveToFirst()) {
-                db.delete("USER","_id = ?",
-                        new String[]{ userValues.getAsString("_id")});
+                db.delete("USER", "_id = ?",
+                        new String[]{userValues.getAsString("_id")});
             }
             cursor.close();
             db.close();
@@ -78,7 +85,7 @@ public class DBController {
                 cursor.close();
                 db.close();
                 return true;
-            }else {
+            } else {
                 db.close();
                 cursor.close();
                 return false;
@@ -90,7 +97,10 @@ public class DBController {
         }
     }
 
-    public boolean loadUserByLogin(ContentValues userValues) {
+    public boolean loadUserByLogin() {
+        ContentValues userValues = new ContentValues();
+        userValues.put("LOGIN", ActiveUser.getLogin());
+        userValues.put("PASSWORD", ActiveUser.getPassword());
         SQLiteDatabase db = DBHelper.getReadableDatabase();
         try {
             Cursor cursor = db.query("USER", new String[]{"_id", "LOGIN", "PASSWORD"},
@@ -102,7 +112,7 @@ public class DBController {
                 cursor.close();
                 db.close();
                 return true;
-            }else {
+            } else {
                 db.close();
                 cursor.close();
                 return false;
@@ -114,39 +124,101 @@ public class DBController {
         }
     }
 
-    public void addAlbum(ContentValues albumValues){
+    public void addAlbum(Album album) {
+        ContentValues albumValues = new ContentValues();
+        albumValues.put("_id", album.getAlbumId());
+        albumValues.put("ALBUM_TITLE", album.getAlbumTitle());
+        albumValues.put("USER_ID", album.getUserId());
         SQLiteDatabase db = DBHelper.getWritableDatabase();
         db.insert("ALBUMS", null, albumValues);
         db.close();
     }
 
-    void deleteAlbum(ContentValues albumValues){
+    public void deleteAlbum(int albumId) {
+        ContentValues values = new ContentValues();
+        values.put("_id", albumId);
         SQLiteDatabase db = DBHelper.getWritableDatabase();
         Cursor cursor = db.query("AlBUMS", new String[]{"_id"},
                 null, null, null, null, null);
         if (cursor.moveToFirst()) {
-            db.delete("ALBUMS","_id = ?",
-                    new String[]{ albumValues.getAsString("_id")});
-        }// TODO: 03.03.2018 так же удалить все фотографии
-        cursor.close();
-        db.close();
-    }
-
-    public void addPhoto(ContentValues albumValues){
-        SQLiteDatabase db = DBHelper.getWritableDatabase();
-        db.insert("PHOTOS", null, albumValues);
-        db.close();
-    }
-
-    void deletePhoto(ContentValues photoValues){
-        SQLiteDatabase db = DBHelper.getWritableDatabase();
-        Cursor cursor = db.query("PHOTOS", new String[]{"_id"},
-                null, null, null, null, null);
-        if (cursor.moveToFirst()) {
-            db.delete("PHOTOS","_id = ?",
-                    new String[]{ photoValues.getAsString("_id")});
+            db.delete("ALBUMS", "_id = ?",
+                    new String[]{values.getAsString("_id")});
         }
         cursor.close();
         db.close();
     }
+
+    public boolean albumExist(Album album) {
+        ContentValues albumValues = new ContentValues();
+        albumValues.put("_id", album.getAlbumId());
+        SQLiteDatabase db = DBHelper.getWritableDatabase();
+        Cursor cursor = db.query("AlBUMS", new String[]{"_id"},
+                "_id = ?", new String[]{albumValues.getAsString("_id")},
+                null, null, null);
+        return cursor.moveToFirst();
+    }
+
+    public boolean photoExist(Photo photo) {
+        ContentValues photoValues = new ContentValues();
+        photoValues.put("_id", photo.getPhotoId());
+        SQLiteDatabase db = DBHelper.getWritableDatabase();
+        Cursor cursor = db.query("PHOTOS", new String[]{"_id"},
+                "_id = ?", new String[]{photoValues.getAsString("_id")},
+                null, null, null);
+        return cursor.moveToFirst();
+    }
+
+    public void addPhoto(Photo photo) {
+        ContentValues photoValues = new ContentValues();
+        photoValues.put("_id", photo.getPhotoId());
+        photoValues.put("PHOTO_LINK", photo.getPhotoLink());
+        photoValues.put("ALBUM_ID", photo.getAlbumId());
+        SQLiteDatabase db = DBHelper.getWritableDatabase();
+        db.insert("PHOTOS", null, photoValues);
+        db.close();
+    }
+
+    void deletePhoto(Photo photo) {
+        ContentValues photoValues = new ContentValues();
+        photoValues.put("_id", photo.getPhotoId());
+        SQLiteDatabase db = DBHelper.getWritableDatabase();
+        Cursor cursor = db.query("PHOTOS", new String[]{"_id"},
+                null, null, null, null, null);
+        if (cursor.moveToFirst()) {
+            db.delete("PHOTOS", "_id = ?",
+                    new String[]{photoValues.getAsString("_id")});
+        }
+        cursor.close();
+        db.close();
+    }
+
+    public void deletePhotoInAlbum(int albumId){
+        Cursor cursor = getPhotoList(albumId);
+        if(cursor!=null) {
+            while (cursor.moveToNext()) {
+                int id = cursor.getInt(0);
+                String link = cursor.getString(1);
+                final Photo photo = new Photo(id, link);
+                PhotoController.deletePhoto(photo, context);
+            }
+            deleteAlbum(albumId);
+            cursor.close();
+        }
+    }
+
+    public Cursor getPhotoList(int albumId) {
+        ContentValues photoValues = new ContentValues();
+        photoValues.put("ALBUM_ID", albumId);
+        SQLiteDatabase db = DBHelper.getReadableDatabase();
+        try {
+            return db.query("PHOTOS", new String[]{"_id", "PHOTO_LINK"},
+                    "ALBUM_ID = ?", new String[]{photoValues.getAsString("ALBUM_ID")},
+                    null, null, null);
+        } catch (SQLException e) {
+            Toast.makeText(context, "Ошибка базы данных", Toast.LENGTH_SHORT).show();
+            db.close();
+            return null;
+        }
+    }
+
 }

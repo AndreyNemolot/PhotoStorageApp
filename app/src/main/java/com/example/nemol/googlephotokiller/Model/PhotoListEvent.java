@@ -1,4 +1,4 @@
-package com.example.nemol.googlephotokiller;
+package com.example.nemol.googlephotokiller.Model;
 
 import com.example.nemol.googlephotokiller.Model.Photo;
 

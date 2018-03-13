@@ -9,7 +9,7 @@ import android.database.Cursor;
 public class Album {
 
     private int albumId;
-    private int userId;
+    private User user;
     private String albumTitle;
 
     @Override
@@ -17,9 +17,12 @@ public class Album {
         return albumTitle;
     }
 
-    public Album(){
-
+    public Album(User user, String albumTitle) {
+        this.user = user;
+        this.albumTitle = albumTitle;
     }
+
+    public Album(){}
 
     public static Album fromCursor(Cursor cursor) {
         Album listItem = new Album();
@@ -32,12 +35,9 @@ public class Album {
     }
 
     public int getUserId() {
-        return userId;
+        return user.getId();
     }
 
-    public void setUserId(int userId) {
-        this.userId = userId;
-    }
 
     public String getAlbumTitle() {
         return albumTitle;

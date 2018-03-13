@@ -24,7 +24,9 @@ import com.example.nemol.googlephotokiller.Adapter.AlbumListCursorAdapter;
 import com.example.nemol.googlephotokiller.Callback.AlbumControllerCallback;
 import com.example.nemol.googlephotokiller.Controller.AlbumController;
 import com.example.nemol.googlephotokiller.Controller.DBController;
-import com.example.nemol.googlephotokiller.ServerDoneEvent;
+import com.example.nemol.googlephotokiller.Controller.PhotoController;
+import com.example.nemol.googlephotokiller.Model.Photo;
+import com.example.nemol.googlephotokiller.Model.ServerDoneEvent;
 import com.example.nemol.googlephotokiller.Service.DBAlbumService;
 import com.example.nemol.googlephotokiller.Fragment.CreateAlbumDialogFragment;
 import com.example.nemol.googlephotokiller.Model.ActiveUser;
@@ -68,10 +70,9 @@ public class MainActivity extends AppCompatActivity
         ButterKnife.bind(this);
         setSupportActionBar(toolbar);
 
-        if(ActiveUser.isOnline()) {
+        setAlbumList();
+        if (ActiveUser.isOnline()) {
             AlbumController.getAllAlbums();
-        }else{
-            setAlbumList();
         }
 
         albumList.setHasFixedSize(false);
@@ -83,7 +84,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onStart() {
         super.onStart();
-        if(ActiveUser.isOnline()) {
+        if (ActiveUser.isOnline()) {
             EventBus.getDefault().register(this);
             CreateAlbumDialogFragment.registerAlbumCallBack(this);
             AlbumController.registerAlbumCallBack(this);
@@ -92,7 +93,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onStop() {
-        if(ActiveUser.isOnline()) {
+        if (ActiveUser.isOnline()) {
             EventBus.getDefault().unregister(this);
         }
         super.onStop();
@@ -109,9 +110,8 @@ public class MainActivity extends AppCompatActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_logout:
-                ContentValues userValues = new ContentValues();
-                userValues.put("_id", Integer.toString(ActiveUser.getId()));
-                new DBController(this).deleteUser(userValues);
+
+                new DBController(this).deleteUser();
                 ActiveUser.isAuth(false);
                 startActivity(new Intent(this, LoginActivity.class));
                 finish();
@@ -123,15 +123,15 @@ public class MainActivity extends AppCompatActivity
 
     @OnClick(R.id.fab_add_album)
     public void createAlbumClick(View view) {
-        if(ActiveUser.isOnline()) {
+        if (ActiveUser.isOnline()) {
             CreateAlbumDialogFragment create = new CreateAlbumDialogFragment();
             create.show(getFragmentManager(), "dlg3");
-        }else{
+        } else {
             Toast.makeText(this, "Нужно подключение к серверу", Toast.LENGTH_LONG).show();
         }
     }
 
-    public Cursor getCursor(){
+    public Cursor getCursor() {
         SQLiteOpenHelper DBHelper = new PhotoStoreDBHelper(this);
         SQLiteDatabase db = DBHelper.getReadableDatabase();
         return db.query("ALBUMS", new String[]{"_id", "ALBUM_TITLE"},
@@ -149,7 +149,7 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onLongClick(final Album album) {
-                if(ActiveUser.isOnline()) {
+                if (ActiveUser.isOnline()) {
                     final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                     builder.setTitle("Вы уверены")
                             .setMessage("Хотите удалить альбом и все фотографии в нём?")
@@ -157,7 +157,7 @@ public class MainActivity extends AppCompatActivity
                                     new DialogInterface.OnClickListener() {
                                         public void onClick(DialogInterface dialog, int id) {
 
-                                            AlbumController.deleteAlbum(album.getAlbumId(), builder.getContext());
+                                            AlbumController.deleteAlbum(album.getAlbumId());
                                         }
                                     })
                             .setNegativeButton("Нет",
@@ -178,10 +178,10 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onEvent(ServerDoneEvent event){
-        if(event.getState()){
-            setAlbumList();
-        }else{
+    public void onEvent(ServerDoneEvent event) {
+        if (event.getState()) {
+            cursorAdapter.changeCursor(getCursor());
+        } else {
             Toast.makeText(this, "Не удалось получить список альбомов", Toast.LENGTH_LONG).show();
         }
     }
@@ -197,7 +197,7 @@ public class MainActivity extends AppCompatActivity
     public void getAlbumList(int code, JSONArray albums) {
         if (code == HttpStatus.SC_OK) {
             Intent intent = new Intent(this, DBAlbumService.class);
-            intent.putExtra(INTENT_MESSAGE,albums.toString());
+            intent.putExtra(INTENT_MESSAGE, albums.toString());
             startService(intent);
 
             Toast.makeText(this, "Получен список альбомов", Toast.LENGTH_LONG).show();
@@ -214,11 +214,12 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void deleteAlbum(int code) {
-        Toast.makeText(this, "Альбом удалён", Toast.LENGTH_LONG).show();
-        //AlbumController.registerAlbumCallBack(this);
-        //AlbumController.getAllAlbums();
-        cursorAdapter.changeCursor(getCursor());
+    public void deleteAlbum(int code, int albumId) {
+        if (code == HttpStatus.SC_OK) {
+            new DBController(this).deletePhotoInAlbum(albumId);
+            Toast.makeText(this, "Альбом удалён", Toast.LENGTH_LONG).show();
+            cursorAdapter.changeCursor(getCursor());
+        }
     }
 
 }

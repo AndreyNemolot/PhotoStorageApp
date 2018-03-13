@@ -6,12 +6,10 @@ import android.content.Intent;
 import android.os.Environment;
 
 import com.example.nemol.googlephotokiller.Controller.DBController;
-import com.example.nemol.googlephotokiller.Controller.PhotoController;
-import com.example.nemol.googlephotokiller.Model.Album;
 import com.example.nemol.googlephotokiller.Model.Photo;
-import com.example.nemol.googlephotokiller.PhotoListEvent;
+import com.example.nemol.googlephotokiller.Model.PhotoListEvent;
 import com.example.nemol.googlephotokiller.R;
-import com.example.nemol.googlephotokiller.ServerDoneEvent;
+import com.example.nemol.googlephotokiller.Model.ServerDoneEvent;
 import com.google.gson.Gson;
 
 import org.greenrobot.eventbus.EventBus;
@@ -42,21 +40,20 @@ public class DBPhotoService extends IntentService {
     protected void onHandleIntent(Intent intent) {
         synchronized (this) {
             String photos = intent.getStringExtra(INTENT_MESSAGE);
+            DBController controller = new DBController(this);
             try {
                 JSONArray jsonArrayPhotos = new JSONArray(photos);
-                List<Photo> photoList = new ArrayList<>();
+                List<Photo> downloadPhotoList = new ArrayList<>();
                 for (int i = 0; i < jsonArrayPhotos.length(); i++) {
-                    Photo object = new Gson().fromJson(jsonArrayPhotos.getJSONObject(i).toString(), Photo.class);
-                    if (!new File(EX_PHOTO_PATH + object.getPhotoLink()).exists()) {
-                        photoList.add(object);
+                    Photo photo = new Gson().fromJson(jsonArrayPhotos.getJSONObject(i).toString(), Photo.class);
+                    if (!new File(EX_PHOTO_PATH + photo.getPhotoLink()).exists()) {
+                        downloadPhotoList.add(photo); // TODO: 13.03.2018 сделать иначе, перенести проверку там где скачивает
                     }
-                        ContentValues photoValues = new ContentValues();
-                        photoValues.put("_id", object.getPhotoId());
-                        photoValues.put("PHOTO_LINK", getResources().getString(R.string.photo_path) + object.getPhotoLink());
-                        photoValues.put("ALBUM_ID", object.getAlbumId());
-                        new DBController(this).addPhoto(photoValues);
+                    if (!controller.photoExist(photo)) {
+                        controller.addPhoto(photo);
+                    }
                 }
-                EventBus.getDefault().post(new PhotoListEvent(photoList));
+                EventBus.getDefault().post(new PhotoListEvent(downloadPhotoList));
             } catch (JSONException e) {
                 EventBus.getDefault().post(new ServerDoneEvent(false));
                 e.printStackTrace();

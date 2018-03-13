@@ -11,15 +11,6 @@ public class User implements Serializable {
     private int id;
     private String login;
     private String password;
-
-    public short getEnabled() {
-        return enabled;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
     private short enabled;
     private String role;
 
@@ -30,6 +21,12 @@ public class User implements Serializable {
         this.enabled = 1;
     }
 
+    public short getEnabled() {
+        return enabled;
+    }
+    public String getRole() {
+        return role;
+    }
     public int getId() {
         return id;
     }

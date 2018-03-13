@@ -22,16 +22,17 @@ import android.widget.Toast;
 
 import com.example.nemol.googlephotokiller.Adapter.PhotoListCursorAdapter;
 import com.example.nemol.googlephotokiller.Callback.PhotoControllerCallback;
+import com.example.nemol.googlephotokiller.Controller.DBController;
 import com.example.nemol.googlephotokiller.Controller.PhotoController;
 import com.example.nemol.googlephotokiller.ImageFilePath;
 import com.example.nemol.googlephotokiller.Model.ActiveUser;
 import com.example.nemol.googlephotokiller.Model.Photo;
-import com.example.nemol.googlephotokiller.PhotoListEvent;
+import com.example.nemol.googlephotokiller.Model.PhotoListEvent;
 import com.example.nemol.googlephotokiller.PhotoStoreDBHelper;
 import com.example.nemol.googlephotokiller.R;
-import com.example.nemol.googlephotokiller.ServerDoneEvent;
 import com.example.nemol.googlephotokiller.Service.DBPhotoService;
 import com.github.clans.fab.FloatingActionButton;
+import com.loopj.android.http.RequestParams;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -51,9 +52,9 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
     FloatingActionButton fabAddPhoto;
     @BindView(R.id.progressBarMain)
     ProgressBar progressBar;
-    private int albumId = 0;
-    private int PERMISSION_REQUEST_CODE = 1;
-    private String INTENT_MESSAGE = "jsonArray";
+    private int albumId;
+    private final int PERMISSION_REQUEST_CODE = 1;
+    private final String INTENT_MESSAGE = "jsonArray";
     private PhotoListCursorAdapter cursorAdapter;
 
 
@@ -118,7 +119,7 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
     @OnClick(R.id.fab_add_photo)
     public void uploadPhotoClick(View view) {
         if (ActiveUser.isOnline()) {
-                getImage();
+            getImage();
         } else {
             Toast.makeText(this, "Нужно подключение к серверу", Toast.LENGTH_LONG).show();
         }
@@ -135,9 +136,8 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
         switch (requestCode) {
             case 1: {
                 if (resultCode == RESULT_OK) {
-                    String selectedImagePath;
                     Uri selectedImageUri = data.getData();
-                    selectedImagePath = ImageFilePath.getPath(getApplicationContext(), selectedImageUri);
+                    String selectedImagePath = ImageFilePath.getPath(getApplicationContext(), selectedImageUri);
                     PhotoController.uploadPhoto(selectedImagePath, albumId);
                     progressBar.setVisibility(View.VISIBLE);
                 }
@@ -149,16 +149,23 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
 
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onEvent(PhotoListEvent event) {
+    public void downloadPhotos(PhotoListEvent event) {
         cursorAdapter.changeCursor(getCursor());
-        PhotoController.downloadPhoto(this, event.getPhotoList());
+        DBController controller = new DBController(this);
+        Cursor cursor = controller.getPhotoList(albumId);
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                int id = cursor.getInt(0);
+                String link = cursor.getString(1);
+                final Photo photo = new Photo(id, link);
+                PhotoController.downloadPhoto(this, photo);
+            }
+        }
     }
-
 
     @Override
     public void getPhotoList(int code, JSONArray photos) {
         if (code == HttpStatus.SC_OK) {
-
             Intent intent = new Intent(this, DBPhotoService.class);
             intent.putExtra(INTENT_MESSAGE, photos.toString());
             startService(intent);
@@ -222,7 +229,6 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
                 i.putExtra("photoLink", photo.getPhotoLink());
                 startActivity(i);
             }
-
             @Override
             public void onLongClick(final Photo photo) {
                 if (ActiveUser.isOnline()) {
@@ -242,7 +248,6 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
                                             dialog.cancel();
                                         }
                                     });
-
                     AlertDialog alert = builder.create();
                     alert.show();
                 }

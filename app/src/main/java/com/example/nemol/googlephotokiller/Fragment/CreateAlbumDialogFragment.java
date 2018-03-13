@@ -59,7 +59,7 @@ public class CreateAlbumDialogFragment extends DialogFragment implements AlbumCo
             progressBar.setVisibility(View.VISIBLE);
             AlbumController.createAlbum(title);
         }else{
-            tvMessage.setText("Нужно ввести название");
+            tvMessage.setText(getResources().getString(R.string.Need_set_title));
             tvMessage.setVisibility(View.VISIBLE);
         }
     }
@@ -74,7 +74,7 @@ public class CreateAlbumDialogFragment extends DialogFragment implements AlbumCo
         switch (code){
             case HttpStatus.SC_CONFLICT:
                 progressBar.setVisibility(View.GONE);
-                tvMessage.setText("Альбом с таким названием существует");
+                tvMessage.setText(getResources().getString(R.string.Album_title_exist));
                 tvMessage.setVisibility(View.VISIBLE);
                 break;
             case HttpStatus.SC_CREATED:
@@ -92,7 +92,7 @@ public class CreateAlbumDialogFragment extends DialogFragment implements AlbumCo
     }
 
     @Override
-    public void deleteAlbum(int code) {
+    public void deleteAlbum(int code, int albumId) {
 
     }
 }

@@ -6,6 +6,7 @@
     android:orientation="vertical"
     android:padding="5dp" >
 
+
     <ProgressBar
         android:id="@+id/progressBar"
         android:visibility="gone"
@@ -18,12 +19,13 @@
         android:id="@+id/tv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Create new album"
+        android:layout_gravity="center"
+        android:text="@string/Create_new_album"
         android:textAppearance="?android:attr/textAppearanceLarge" />
 
     <EditText
         android:id="@+id/etTitle"
-        android:hint="Title"
+        android:hint="@string/Title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
         <requestFocus />
@@ -55,8 +57,8 @@
             android:id="@+id/btnYes"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/Yes" />
-
+            android:text="@string/Yes"
+            android:layout_gravity="right"
+            />
     </LinearLayout>
-
 </LinearLayout>

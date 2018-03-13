@@ -6,7 +6,9 @@ import android.content.Context;
 
 import com.example.nemol.googlephotokiller.Callback.AlbumControllerCallback;
 import com.example.nemol.googlephotokiller.Model.ActiveUser;
+import com.example.nemol.googlephotokiller.Model.Album;
 import com.example.nemol.googlephotokiller.Model.Photo;
+import com.example.nemol.googlephotokiller.Model.User;
 import com.example.nemol.googlephotokiller.RestClient;
 import com.google.gson.Gson;
 import com.loopj.android.http.JsonHttpResponseHandler;
@@ -14,6 +16,7 @@ import com.loopj.android.http.RequestParams;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 
@@ -36,9 +39,19 @@ public class AlbumController {
     }
 
     public static void createAlbum(String title) {
+        User user = new User("andrey", "12345");
+        Album album = new Album(user, title);
         RequestParams params = new RequestParams();
-        params.put("userId", ActiveUser.getId());
+
+
+        //params.put("albumId", "1");
         params.put("albumTitle", title);
+        params.put("user.userId", ActiveUser.getId());
+        params.add("user.login", "andrey");
+        params.add("user.password", "12345");
+        params.add("user.enabled", "1");
+        params.add("user.role", "ROLE_USER");
+
 
         RestClient.post(ALBUM_URL, params, new JsonHttpResponseHandler() {
             @Override
@@ -61,37 +74,35 @@ public class AlbumController {
 
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONArray timeline) {
+                super.onSuccess(statusCode, headers, timeline);
                 albumCallback.getAlbumList(statusCode, timeline);
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                super.onFailure(statusCode, headers, throwable, errorResponse);
+                albumCallback.getAlbumList(statusCode, null);
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONArray errorResponse) {
+                super.onFailure(statusCode, headers, throwable, errorResponse);
+                albumCallback.getAlbumList(statusCode, null);
             }
         });
     }
 
-    public static void deleteAlbum(int albumId, Context context) {
+    public static void deleteAlbum(final int albumId) {
         RequestParams params = new RequestParams();
         params.put("user_id", ActiveUser.getId());
         params.put("album_id", albumId);
 
-        ContentValues values = new ContentValues();
-        values.put("_id", albumId);
-        new DBController(context).deleteAlbum(values);
-
         RestClient.delete(ALBUM_URL, params, new JsonHttpResponseHandler() {
-
                     @Override
                     public void onSuccess(int statusCode, Header[] headers, JSONArray timeline) {
                         super.onSuccess(statusCode, headers, timeline);
-                        try {
-                            for (int i = 0; i < timeline.length(); i++) {
-                                Photo object = new Gson().fromJson(timeline.getJSONObject(i).toString(), Photo.class);
-                                new File(PHOTO_PATH + object.getPhotoLink()).delete();
-                            }
-                            albumCallback.deleteAlbum(statusCode);
-                        } catch (JSONException e) {
-                            System.out.println(e.getMessage());
-                        }
+                        albumCallback.deleteAlbum(statusCode, albumId);
                     }
-
-
                 }
         );
     }

@@ -1,4 +1,4 @@
-package com.example.nemol.googlephotokiller;
+package com.example.nemol.googlephotokiller.Model;
 
 /**
  * Created by nemol on 03.03.2018.

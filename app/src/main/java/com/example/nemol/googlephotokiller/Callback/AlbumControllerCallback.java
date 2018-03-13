@@ -16,5 +16,5 @@ public interface AlbumControllerCallback {
 
     void getAlbumList(int code, JSONArray albums);
     void addAlbum(int code);
-    void deleteAlbum(int code);
+    void deleteAlbum(int code, int albumId);
 }

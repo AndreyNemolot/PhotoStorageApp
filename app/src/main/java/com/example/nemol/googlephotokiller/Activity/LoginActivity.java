@@ -4,13 +4,8 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
-import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.database.Cursor;
-import android.database.SQLException;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.support.v7.app.AppCompatActivity;
 
 import android.os.Build;
@@ -170,21 +165,13 @@ public class LoginActivity extends AppCompatActivity implements UserControllerCa
     @Override
     public void userAction(int code) {
         if (code == HttpStatus.SC_OK){
-            ContentValues userValues = new ContentValues();
-            userValues.put("_id", Integer.toString(ActiveUser.getId()));
-            userValues.put("LOGIN", ActiveUser.getLogin());
-            userValues.put("PASSWORD", ActiveUser.getPassword());
-            new DBController(this).saveUser(userValues);
-
-
+            new DBController(this).addUser();
             Toast.makeText(this, "Пользователь авторизован", Toast.LENGTH_LONG).show();
             startActivity(new Intent(this, MainActivity.class));
             finish();
         }else{
-            ContentValues userValues = new ContentValues();
-            userValues.put("LOGIN", ActiveUser.getLogin());
-            userValues.put("PASSWORD", ActiveUser.getPassword());
-            if(new DBController(this).loadUserByLogin(userValues)){
+            if(new DBController(this).loadUserByLogin()){
+                Toast.makeText(this, "Пользователь в оффлайн режиме", Toast.LENGTH_LONG).show();
                 startActivity(new Intent(this, MainActivity.class));
                 finish();
             }else{
