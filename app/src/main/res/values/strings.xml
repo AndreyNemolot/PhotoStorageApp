@@ -12,12 +12,13 @@
     <string name="Add_album">Добавить альбом</string>
     <string name="Add_photo">Добавить фото</string>
     <string name="Login">Логин</string>
-    <string name="Password">Пароль</string>
-    <string name="Repeat_password">Повторите пароль</string>
-    <string name="Need_set_title">Нужно ввести название</string>
-    <string name="Album_title_exist">Альбом с таким названием существует</string>
-    <string name="Create_new_album">Добавление альбома</string>
-    <string name="Title">Название</string>
+    <string name="password">Пароль</string>
+    <string name="repeat_password">Повторите пароль</string>
+    <string name="need_set_title">Нужно ввести название</string>
+    <string name="album_title_exist">Альбом с таким названием существует</string>
+    <string name="create_new_album">Добавление альбома</string>
+    <string name="title">Название</string>
+    <string name="action_share">Поделиться</string>
 
 
     <string name="action_settings">Настройки</string>

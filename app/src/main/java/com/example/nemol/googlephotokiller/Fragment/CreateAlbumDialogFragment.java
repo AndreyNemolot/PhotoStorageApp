@@ -1,7 +1,6 @@
 package com.example.nemol.googlephotokiller.Fragment;
 
 import android.app.DialogFragment;
-import android.content.ContentValues;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,13 +11,9 @@ import android.widget.TextView;
 
 import com.example.nemol.googlephotokiller.Callback.AlbumControllerCallback;
 import com.example.nemol.googlephotokiller.Controller.AlbumController;
-import com.example.nemol.googlephotokiller.Controller.DBController;
-import com.example.nemol.googlephotokiller.Model.Album;
 import com.example.nemol.googlephotokiller.R;
 
 import org.json.JSONArray;
-
-import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -59,7 +54,7 @@ public class CreateAlbumDialogFragment extends DialogFragment implements AlbumCo
             progressBar.setVisibility(View.VISIBLE);
             AlbumController.createAlbum(title);
         }else{
-            tvMessage.setText(getResources().getString(R.string.Need_set_title));
+            tvMessage.setText(getResources().getString(R.string.need_set_title));
             tvMessage.setVisibility(View.VISIBLE);
         }
     }
@@ -74,7 +69,7 @@ public class CreateAlbumDialogFragment extends DialogFragment implements AlbumCo
         switch (code){
             case HttpStatus.SC_CONFLICT:
                 progressBar.setVisibility(View.GONE);
-                tvMessage.setText(getResources().getString(R.string.Album_title_exist));
+                tvMessage.setText(getResources().getString(R.string.album_title_exist));
                 tvMessage.setVisibility(View.VISIBLE);
                 break;
             case HttpStatus.SC_CREATED:

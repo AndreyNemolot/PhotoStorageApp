@@ -1,24 +1,18 @@
 package com.example.nemol.googlephotokiller.Controller;
 
 
-import android.content.ContentValues;
 import android.content.Context;
 
 import com.example.nemol.googlephotokiller.Callback.AlbumControllerCallback;
 import com.example.nemol.googlephotokiller.Model.ActiveUser;
 import com.example.nemol.googlephotokiller.Model.Album;
-import com.example.nemol.googlephotokiller.Model.Photo;
 import com.example.nemol.googlephotokiller.Model.User;
 import com.example.nemol.googlephotokiller.RestClient;
-import com.google.gson.Gson;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.io.File;
 
 import cz.msebera.android.httpclient.Header;
 
@@ -92,7 +86,8 @@ public class AlbumController {
         });
     }
 
-    public static void deleteAlbum(final int albumId) {
+    public static void deleteAlbum(Context context, final int albumId) {
+        new DBController(context).deletePhotosInAlbum(albumId);
         RequestParams params = new RequestParams();
         params.put("user_id", ActiveUser.getId());
         params.put("album_id", albumId);

@@ -13,9 +13,6 @@ import com.example.nemol.googlephotokiller.Model.Album;
 import com.example.nemol.googlephotokiller.Model.Photo;
 import com.example.nemol.googlephotokiller.PhotoStoreDBHelper;
 
-/**
- * Created by nemol on 28.02.2018.
- */
 
 public class DBController {
 
@@ -192,14 +189,14 @@ public class DBController {
         db.close();
     }
 
-    public void deletePhotoInAlbum(int albumId){
+    void deletePhotosInAlbum(int albumId){
         Cursor cursor = getPhotoList(albumId);
         if(cursor!=null) {
             while (cursor.moveToNext()) {
                 int id = cursor.getInt(0);
                 String link = cursor.getString(1);
                 final Photo photo = new Photo(id, link);
-                PhotoController.deletePhoto(photo, context);
+                PhotoController.deletePhoto(context, photo);
             }
             deleteAlbum(albumId);
             cursor.close();

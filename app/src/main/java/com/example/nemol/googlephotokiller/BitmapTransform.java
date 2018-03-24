@@ -1,6 +1,8 @@
 package com.example.nemol.googlephotokiller;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.widget.ImageView;
 
 import com.squareup.picasso.Transformation;
 

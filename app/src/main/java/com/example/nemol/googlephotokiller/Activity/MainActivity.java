@@ -110,7 +110,6 @@ public class MainActivity extends AppCompatActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_logout:
-
                 new DBController(this).deleteUser();
                 ActiveUser.isAuth(false);
                 startActivity(new Intent(this, LoginActivity.class));
@@ -156,8 +155,7 @@ public class MainActivity extends AppCompatActivity
                             .setPositiveButton("Да",
                                     new DialogInterface.OnClickListener() {
                                         public void onClick(DialogInterface dialog, int id) {
-
-                                            AlbumController.deleteAlbum(album.getAlbumId());
+                                            AlbumController.deleteAlbum(builder.getContext() ,album.getAlbumId());
                                         }
                                     })
                             .setNegativeButton("Нет",
@@ -216,7 +214,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void deleteAlbum(int code, int albumId) {
         if (code == HttpStatus.SC_OK) {
-            new DBController(this).deletePhotoInAlbum(albumId);
             Toast.makeText(this, "Альбом удалён", Toast.LENGTH_LONG).show();
             cursorAdapter.changeCursor(getCursor());
         }

@@ -20,12 +20,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:text="@string/Create_new_album"
+        android:text="@string/create_new_album"
         android:textAppearance="?android:attr/textAppearanceLarge" />
 
     <EditText
         android:id="@+id/etTitle"
-        android:hint="@string/Title"
+        android:hint="@string/title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
         <requestFocus />

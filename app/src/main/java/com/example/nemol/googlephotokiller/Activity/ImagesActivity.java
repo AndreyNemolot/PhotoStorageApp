@@ -1,6 +1,7 @@
 package com.example.nemol.googlephotokiller.Activity;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -10,9 +11,12 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -27,17 +31,22 @@ import com.example.nemol.googlephotokiller.Controller.PhotoController;
 import com.example.nemol.googlephotokiller.ImageFilePath;
 import com.example.nemol.googlephotokiller.Model.ActiveUser;
 import com.example.nemol.googlephotokiller.Model.Photo;
-import com.example.nemol.googlephotokiller.Model.PhotoListEvent;
+import com.example.nemol.googlephotokiller.Model.ServerDoneEvent;
 import com.example.nemol.googlephotokiller.PhotoStoreDBHelper;
 import com.example.nemol.googlephotokiller.R;
 import com.example.nemol.googlephotokiller.Service.DBPhotoService;
 import com.github.clans.fab.FloatingActionButton;
-import com.loopj.android.http.RequestParams;
+import com.github.clans.fab.FloatingActionMenu;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 import org.json.JSONArray;
+
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -50,12 +59,18 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
     RecyclerView imageList;
     @BindView(R.id.fab_add_photo)
     FloatingActionButton fabAddPhoto;
+    @BindView(R.id.fab_take_picture)
+    FloatingActionButton fabTakePicture;
+    @BindView(R.id.fab_menu)
+    FloatingActionMenu fabMenu;
     @BindView(R.id.progressBarMain)
     ProgressBar progressBar;
+    private PhotoListCursorAdapter cursorAdapter;
     private int albumId;
     private final int PERMISSION_REQUEST_CODE = 1;
+    static final int REQUEST_TAKE_PHOTO = 2;
     private final String INTENT_MESSAGE = "jsonArray";
-    private PhotoListCursorAdapter cursorAdapter;
+    private String photoName;
 
 
     @Override
@@ -119,17 +134,59 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
     @OnClick(R.id.fab_add_photo)
     public void uploadPhotoClick(View view) {
         if (ActiveUser.isOnline()) {
-            getImage();
+            Intent photoPickerIntent = new Intent(Intent.ACTION_GET_CONTENT);
+            photoPickerIntent.setType("image/*");
+            startActivityForResult(Intent.createChooser(photoPickerIntent, "Select picture"), 1);
         } else {
             Toast.makeText(this, "Нужно подключение к серверу", Toast.LENGTH_LONG).show();
         }
     }
 
-    public void getImage() {
-        Intent photoPickerIntent = new Intent(Intent.ACTION_GET_CONTENT);
-        photoPickerIntent.setType("image/*");
-        startActivityForResult(photoPickerIntent, 1);
+    @OnClick(R.id.fab_take_picture)
+    public void takePictureClick(View view) {
+        if (ActiveUser.isOnline()) {
+            Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            // Ensure that there's a camera activity to handle the intent
+            if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+                // Create the File where the photo should go
+                File photoFile = null;
+                try {
+                    photoFile = createImageFile();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+                // Continue only if the File was successfully created
+                if (photoFile != null) {
+                    Uri photoURI = FileProvider.getUriForFile(this,
+                            "com.example.android.fileprovider",
+                            photoFile);
+                    photoName = photoFile.getAbsolutePath();
+                    takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                    startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
+                }
+            }
+        } else {
+            Toast.makeText(this, "Нужно подключение к серверу", Toast.LENGTH_LONG).show();
+        }
     }
+
+    private File createImageFile() throws IOException {
+        // Create an image file name
+        @SuppressLint("SimpleDateFormat")
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        // Save a file: path for use with ACTION_VIEW intents
+        //mCurrentPhotoPath = image.getAbsolutePath();
+        return image;
+    }
+
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -143,23 +200,33 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
                 }
                 break;
             }
+            case 2: {
+                PhotoController.uploadPhoto(photoName, albumId);
+                break;
+            }
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
 
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void downloadPhotos(PhotoListEvent event) {
-        cursorAdapter.changeCursor(getCursor());
-        DBController controller = new DBController(this);
-        Cursor cursor = controller.getPhotoList(albumId);
-        if (cursor != null) {
-            while (cursor.moveToNext()) {
-                int id = cursor.getInt(0);
-                String link = cursor.getString(1);
-                final Photo photo = new Photo(id, link);
-                PhotoController.downloadPhoto(this, photo);
+    public void downloadPhotos(ServerDoneEvent done) {
+        if (done.getState()) {
+            cursorAdapter.changeCursor(getCursor());
+            DBController controller = new DBController(this);
+            Cursor cursor = controller.getPhotoList(albumId);
+            if (cursor != null) {
+                while (cursor.moveToNext()) {
+                    String link = cursor.getString(1);
+                    if (!(new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES).
+                            getAbsolutePath()+ File.separator + link).exists())) {
+                        int id = cursor.getInt(0);
+                        final Photo photo = new Photo(id, link);
+                        PhotoController.downloadPhoto(this, photo);
+                    }
+                }
             }
+            cursor.close();
         }
     }
 
@@ -180,6 +247,7 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
     @Override
     public void uploadPhoto(int code) {
         if (code == HttpStatus.SC_ACCEPTED) {
+            // TODO: 13.03.2018 загружать фото из памяти
             Toast.makeText(this, "Фото загружено в альбом", Toast.LENGTH_LONG).show();
             progressBar.setVisibility(View.GONE);
             PhotoController.getPhotoList(albumId);
@@ -229,6 +297,7 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
                 i.putExtra("photoLink", photo.getPhotoLink());
                 startActivity(i);
             }
+
             @Override
             public void onLongClick(final Photo photo) {
                 if (ActiveUser.isOnline()) {
@@ -238,8 +307,7 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
                             .setPositiveButton("Да",
                                     new DialogInterface.OnClickListener() {
                                         public void onClick(DialogInterface dialog, int id) {
-
-                                            PhotoController.deletePhoto(photo, builder.getContext());
+                                            PhotoController.deletePhoto(builder.getContext(), photo);
                                         }
                                     })
                             .setNegativeButton("Нет",

@@ -1,11 +1,7 @@
 package com.example.nemol.googlephotokiller.Controller;
 
-import android.content.ContentValues;
 import android.content.Context;
 import android.os.Environment;
-import android.os.Handler;
-import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 
 import com.example.nemol.googlephotokiller.Callback.PhotoControllerCallback;
 import com.example.nemol.googlephotokiller.Model.Photo;
@@ -18,24 +14,15 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
 
 import cz.msebera.android.httpclient.Header;
 
-/**
- * Created by nemol on 28.11.2017.
- */
+public class PhotoController{
 
-public class PhotoController extends AppCompatActivity {
-
-    private final static String PHOTO_URL = "photo/photo";
-    private final static String PHOTOS_URL = "photo/photos";
-    private final static String IN_PHOTO_PATH = "/data/data/com.example.nemol.googlephotokiller/cache/";
-    private final static String EX_PHOTO_PATH = Environment.getExternalStorageDirectory() + File.separator + "GooglePhotoKiller/";
+    private static final String PHOTO_URL = "photo/photo";
+    private static final String PHOTOS_URL = "photo/photos";
+    private static final String IN_PHOTO_PATH = "/data/data/com.example.nemol.googlephotokiller/cache/";
     private static PhotoControllerCallback photoCallback;
 
     public static void registerPhotoCallBack(PhotoControllerCallback Callback) {
@@ -55,7 +42,6 @@ public class PhotoController extends AppCompatActivity {
         params.setHttpEntityIsRepeatable(true);
         params.setUseJsonStreamer(false);
         RestClient.post(PHOTO_URL, params, new JsonHttpResponseHandler() {
-
             @Override
             public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
                 super.onFailure(statusCode, headers, responseString, throwable);
@@ -66,8 +52,8 @@ public class PhotoController extends AppCompatActivity {
     }
 
     public static void downloadPhoto(Context context, final Photo photo) {
-            final String name = photo.getPhotoLink();
-
+            final String photoPath = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES).
+                getAbsolutePath() + File.separator;
             RequestParams params = new RequestParams();
             params.put("photo_id", photo.getPhotoId());
 
@@ -79,8 +65,8 @@ public class PhotoController extends AppCompatActivity {
 
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, File response) {
-                    response.renameTo(new File(IN_PHOTO_PATH, name));
-                    photo.movePhotoToExternalStorage();
+                    response.renameTo(new File(IN_PHOTO_PATH, photo.getPhotoLink()));
+                    photo.movePhotoToExternalStorage(photoPath);
                     photoCallback.downloadPhoto(statusCode);
                 }
             });
@@ -104,8 +90,10 @@ public class PhotoController extends AppCompatActivity {
         });
     }
 
-    public static void deletePhoto(Photo photo, Context context) {
-        new File(File.separator + EX_PHOTO_PATH + photo.getPhotoLink()).delete();
+    public static void deletePhoto(Context context, Photo photo) {
+        final String photoPath = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES).
+                getAbsolutePath() + File.separator;
+        new File(photoPath + photo.getPhotoLink()).delete();
         RequestParams params = new RequestParams();
         params.put("photo_id", photo.getPhotoId());
         new DBController(context).deletePhoto(photo);

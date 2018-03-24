@@ -21,7 +21,6 @@ public class Photo {
     private int albumId;
     private String photoLink;
     private final String IN_PHOTO_PATH = "/data/data/com.example.nemol.googlephotokiller/cache/";
-    private final String EX_PHOTO_PATH = Environment.getExternalStorageDirectory() + File.separator + "GooglePhotoKiller/";
 
 
     public Photo() {
@@ -30,6 +29,10 @@ public class Photo {
     public Photo(int photoId, String photoLink) {
         this.photoId = photoId;
         this.photoLink = photoLink;
+    }
+
+    public void setAlbumId(int albumId) {
+        this.albumId = albumId;
     }
 
     public String getIN_PHOTO_PATH() {
@@ -62,7 +65,7 @@ public class Photo {
         this.photoLink = photoLink;
     }
 
-    public void movePhotoToExternalStorage() {
+    public void movePhotoToExternalStorage(final String path) {
         final Handler handler = new Handler();
         handler.post(new Runnable() {
             @Override
@@ -70,12 +73,12 @@ public class Photo {
                 InputStream in;
                 OutputStream out;
                 try {
-                    File dir = new File(EX_PHOTO_PATH);
+                    File dir = new File(path);
                     if (!dir.exists()) {
                         dir.mkdirs();
                     }
                     in = new FileInputStream(IN_PHOTO_PATH + photoLink);
-                    out = new FileOutputStream(EX_PHOTO_PATH + photoLink);
+                    out = new FileOutputStream(path + photoLink);
 
                     byte[] buffer = new byte[1024];
                     int read;

@@ -2,6 +2,8 @@ package com.example.nemol.googlephotokiller.Adapter;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Environment;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
@@ -24,10 +26,9 @@ import java.io.File;
 public class PhotoListCursorAdapter extends CursorRecyclerViewAdapter<PhotoListCursorAdapter.ViewHolder> {
 
     private PhotoListCursorAdapter.Listener listener;
-    private final String PHOTO_PATH = "file:///sdcard/GooglePhotoKiller/";
-    private final String EX_PHOTO_PATH = Environment.getExternalStorageDirectory() + File.separator + "GooglePhotoKiller/";
-    private  int MAX_WIDTH = 420;
-    private  int MAX_HEIGHT = 420;
+    private String photoPath;
+    private int MAX_WIDTH = 420;
+    private int MAX_HEIGHT = 420;
 
 
     public interface Listener {
@@ -38,6 +39,7 @@ public class PhotoListCursorAdapter extends CursorRecyclerViewAdapter<PhotoListC
 
     public PhotoListCursorAdapter(Context context, Cursor cursor) {
         super(context, cursor);
+        this.photoPath = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES).toURI().toString();
 
     }
 
@@ -63,14 +65,17 @@ public class PhotoListCursorAdapter extends CursorRecyclerViewAdapter<PhotoListC
         return new PhotoListCursorAdapter.ViewHolder(itemView);
     }
 
+
+
     @Override
     public void onBindViewHolder(PhotoListCursorAdapter.ViewHolder viewHolder, Cursor cursor) {
         cursor.moveToPosition(viewHolder.getAdapterPosition());
         CardView cardView = viewHolder.cardView;
         Photo myListItem = Photo.fromCursor(cursor);
 
-        final String name = PHOTO_PATH + myListItem.getPhotoLink();
+        final String name = photoPath + File.separator + myListItem.getPhotoLink();
         int size = (int) Math.ceil(Math.sqrt(MAX_WIDTH * MAX_HEIGHT));
+
         Picasso.with(viewHolder.imageView.getContext()).load(name).transform(new BitmapTransform(MAX_WIDTH, MAX_HEIGHT))
                 .resize(size, size).centerCrop()
                 .into(viewHolder.imageView);

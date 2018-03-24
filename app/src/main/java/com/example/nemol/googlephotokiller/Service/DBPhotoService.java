@@ -20,17 +20,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-
-/**
- * An {@link IntentService} subclass for handling asynchronous task requests in
- * a service on a separate handler thread.
- * <p>
- * TODO: Customize class - update intent actions and extra parameters.
- */
 public class DBPhotoService extends IntentService {
 
     private final String INTENT_MESSAGE = "jsonArray";
-    private final String EX_PHOTO_PATH = Environment.getExternalStorageDirectory() + File.separator + "GooglePhotoKiller/";
 
     public DBPhotoService() {
         super("DBPhotoService");
@@ -43,17 +35,13 @@ public class DBPhotoService extends IntentService {
             DBController controller = new DBController(this);
             try {
                 JSONArray jsonArrayPhotos = new JSONArray(photos);
-                List<Photo> downloadPhotoList = new ArrayList<>();
                 for (int i = 0; i < jsonArrayPhotos.length(); i++) {
                     Photo photo = new Gson().fromJson(jsonArrayPhotos.getJSONObject(i).toString(), Photo.class);
-                    if (!new File(EX_PHOTO_PATH + photo.getPhotoLink()).exists()) {
-                        downloadPhotoList.add(photo); // TODO: 13.03.2018 сделать иначе, перенести проверку там где скачивает
-                    }
                     if (!controller.photoExist(photo)) {
                         controller.addPhoto(photo);
                     }
                 }
-                EventBus.getDefault().post(new PhotoListEvent(downloadPhotoList));
+                EventBus.getDefault().post(new ServerDoneEvent(true));
             } catch (JSONException e) {
                 EventBus.getDefault().post(new ServerDoneEvent(false));
                 e.printStackTrace();
