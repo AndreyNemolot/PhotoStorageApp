@@ -14,7 +14,7 @@ import cz.msebera.android.httpclient.auth.AuthScope;
  */
 
 public class RestClient {
-    private static final String BASE_URL = "http://192.168.1.36:8080/";
+    private static final String BASE_URL = "http://192.169.1.57:8080/";
     //private static final String BASE_URL = "http://192.168.43.33:8080/";
 
     private static AsyncHttpClient client = new AsyncHttpClient();

@@ -3,6 +3,7 @@ package com.example.nemol.googlephotokiller.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Environment;
+import android.support.v4.content.FileProvider;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -29,7 +30,7 @@ public class FullImageActivity extends AppCompatActivity {
     ImageView image;
     /*private static final int MAX_WIDTH = 3840;
     private static final int MAX_HEIGHT = 2160;*/
-    private String photoPath;
+    private URI photoPath;
     private String photoName;
     private String photoLink;
     private final int MAX_WIDTH = 5000;
@@ -49,8 +50,11 @@ public class FullImageActivity extends AppCompatActivity {
     private void setIntent(){
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.setType("image/*");
-        Uri uri = Uri.fromFile(new File(photoPath, photoName));
-        shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
+      //  Uri uri = Uri.fromFile(new File(photoPath2, photoName));
+        File image = new File(photoPath.getPath(), photoName);
+        Uri photoURI = FileProvider.getUriForFile(getApplicationContext(),
+                "com.example.nemol.fileprovider", image);
+        shareIntent.putExtra(Intent.EXTRA_STREAM, photoURI);
         shareActionProvider.setShareIntent(shareIntent);
     }
 
@@ -61,8 +65,7 @@ public class FullImageActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         ButterKnife.bind(this);
-        photoPath = getExternalFilesDir(Environment.DIRECTORY_PICTURES).getAbsolutePath();//.
-                //toURI().toString();
+        photoPath = getExternalFilesDir(Environment.DIRECTORY_PICTURES).toURI();
         photoName = getIntent().getStringExtra("photoLink");
 
         photoLink = photoPath.toString() + photoName;
