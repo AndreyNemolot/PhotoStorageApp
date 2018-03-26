@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Bundle;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
@@ -48,7 +49,7 @@ import butterknife.OnClick;
 import cz.msebera.android.httpclient.HttpStatus;
 
 public class MainActivity extends AppCompatActivity
-        implements AlbumControllerCallback {
+        implements AlbumControllerCallback, SwipeRefreshLayout.OnRefreshListener {
 
 
     @BindView(R.id.list_album)
@@ -59,6 +60,8 @@ public class MainActivity extends AppCompatActivity
     DrawerLayout drawer;
     @BindView(R.id.toolbar)
     Toolbar toolbar;
+    @BindView(R.id.swipe_container)
+    SwipeRefreshLayout mSwipeRefreshLayout;
     private String INTENT_MESSAGE = "jsonArray";
     private AlbumListCursorAdapter cursorAdapter;
 
@@ -69,6 +72,12 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
         setSupportActionBar(toolbar);
+
+        mSwipeRefreshLayout.setOnRefreshListener(this);
+        mSwipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary,
+                android.R.color.holo_green_dark,
+                android.R.color.holo_orange_dark,
+                android.R.color.holo_blue_dark);
 
         setAlbumList();
         if (ActiveUser.isOnline()) {
@@ -155,7 +164,7 @@ public class MainActivity extends AppCompatActivity
                             .setPositiveButton("Да",
                                     new DialogInterface.OnClickListener() {
                                         public void onClick(DialogInterface dialog, int id) {
-                                            AlbumController.deleteAlbum(builder.getContext() ,album.getAlbumId());
+                                            AlbumController.deleteAlbum(builder.getContext(), album.getAlbumId());
                                         }
                                     })
                             .setNegativeButton("Нет",
@@ -197,9 +206,10 @@ public class MainActivity extends AppCompatActivity
             Intent intent = new Intent(this, DBAlbumService.class);
             intent.putExtra(INTENT_MESSAGE, albums.toString());
             startService(intent);
-
+            mSwipeRefreshLayout.setRefreshing(false);
             Toast.makeText(this, "Получен список альбомов", Toast.LENGTH_LONG).show();
         } else {
+            mSwipeRefreshLayout.setRefreshing(false);
             Toast.makeText(this, "Не удалось получить список альбомов", Toast.LENGTH_LONG).show();
         }
     }
@@ -219,4 +229,10 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    @Override
+    public void onRefresh() {
+        if (ActiveUser.isOnline()) {
+            AlbumController.getAllAlbums();
+        }
+    }
 }

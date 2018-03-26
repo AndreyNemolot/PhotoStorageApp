@@ -17,6 +17,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -53,7 +54,7 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import cz.msebera.android.httpclient.HttpStatus;
 
-public class ImagesActivity extends AppCompatActivity implements PhotoControllerCallback {
+public class ImagesActivity extends AppCompatActivity implements PhotoControllerCallback, SwipeRefreshLayout.OnRefreshListener {
 
     @BindView(R.id.imageGallery)
     RecyclerView imageList;
@@ -65,6 +66,8 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
     FloatingActionMenu fabMenu;
     @BindView(R.id.progressBarMain)
     ProgressBar progressBar;
+    @BindView(R.id.swipe_container)
+    SwipeRefreshLayout mSwipeRefreshLayout;
     private PhotoListCursorAdapter cursorAdapter;
     private int albumId;
     private final int PERMISSION_REQUEST_CODE = 1;
@@ -83,6 +86,13 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
         imageList.setHasFixedSize(false);
         RecyclerView.LayoutManager layoutManager = new GridLayoutManager(getApplicationContext(), 2);
         imageList.setLayoutManager(layoutManager);
+
+        mSwipeRefreshLayout.setOnRefreshListener(this);
+        mSwipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary,
+                android.R.color.holo_green_dark,
+                android.R.color.holo_orange_dark,
+                android.R.color.holo_blue_dark);
+
 
         albumId = getIntent().getExtras().getInt("albumId");
         String albumTitle = getIntent().getExtras().getString("albumTitle");
@@ -146,16 +156,13 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
     public void takePictureClick(View view) {
         if (ActiveUser.isOnline()) {
             Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            // Ensure that there's a camera activity to handle the intent
             if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-                // Create the File where the photo should go
                 File photoFile = null;
                 try {
                     photoFile = createImageFile();
                 } catch (IOException ex) {
                     ex.printStackTrace();
                 }
-                // Continue only if the File was successfully created
                 if (photoFile != null) {
                     Uri photoURI = FileProvider.getUriForFile(this,
                             "com.example.android.fileprovider",
@@ -176,15 +183,11 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String imageFileName = "JPEG_" + timeStamp + "_";
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        File image = File.createTempFile(
+        return File.createTempFile(
                 imageFileName,  /* prefix */
                 ".jpg",         /* suffix */
                 storageDir      /* directory */
         );
-
-        // Save a file: path for use with ACTION_VIEW intents
-        //mCurrentPhotoPath = image.getAbsolutePath();
-        return image;
     }
 
 
@@ -217,16 +220,19 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
             Cursor cursor = controller.getPhotoList(albumId);
             if (cursor != null) {
                 while (cursor.moveToNext()) {
-                    String link = cursor.getString(1);
+                    final String link = cursor.getString(1);
                     if (!(new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES).
-                            getAbsolutePath()+ File.separator + link).exists())) {
+                            getAbsolutePath() + File.separator + link).exists())) {
                         int id = cursor.getInt(0);
                         final Photo photo = new Photo(id, link);
                         PhotoController.downloadPhoto(this, photo);
                     }
                 }
             }
-            cursor.close();
+            if (cursor != null) {
+                cursor.close();
+            }
+            mSwipeRefreshLayout.setRefreshing(false);
         }
     }
 
@@ -240,6 +246,7 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
             Toast.makeText(this, "Получен список фотографий", Toast.LENGTH_LONG).show();
 
         } else {
+            mSwipeRefreshLayout.setRefreshing(false);
             Toast.makeText(this, "Не удалось получить список фотографий", Toast.LENGTH_LONG).show();
         }
     }
@@ -247,7 +254,6 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
     @Override
     public void uploadPhoto(int code) {
         if (code == HttpStatus.SC_ACCEPTED) {
-            // TODO: 13.03.2018 загружать фото из памяти
             Toast.makeText(this, "Фото загружено в альбом", Toast.LENGTH_LONG).show();
             progressBar.setVisibility(View.GONE);
             PhotoController.getPhotoList(albumId);
@@ -324,4 +330,10 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
         imageList.setAdapter(cursorAdapter);
     }
 
+    @Override
+    public void onRefresh() {
+        if (ActiveUser.isOnline()) {
+            PhotoController.getPhotoList(albumId);
+        }
+    }
 }
