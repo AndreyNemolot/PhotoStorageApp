@@ -32,7 +32,7 @@ public class AlbumController {
         albumCallback = callback;
     }
 
-    public static void createAlbum(String title) {
+    public static void addAlbum(String title) {
         User user = new User("andrey", "12345");
         Album album = new Album(user, title);
         RequestParams params = new RequestParams();
@@ -87,7 +87,6 @@ public class AlbumController {
     }
 
     public static void deleteAlbum(Context context, final int albumId) {
-        new DBController(context).deletePhotosInAlbum(albumId);
         RequestParams params = new RequestParams();
         params.put("user_id", ActiveUser.getId());
         params.put("album_id", albumId);

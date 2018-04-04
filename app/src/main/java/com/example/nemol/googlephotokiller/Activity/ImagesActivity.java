@@ -27,7 +27,7 @@ import android.widget.Toast;
 
 import com.example.nemol.googlephotokiller.Adapter.PhotoListCursorAdapter;
 import com.example.nemol.googlephotokiller.Callback.PhotoControllerCallback;
-import com.example.nemol.googlephotokiller.Controller.DBController;
+import com.example.nemol.googlephotokiller.Controller.DBPhotoController;
 import com.example.nemol.googlephotokiller.Controller.PhotoController;
 import com.example.nemol.googlephotokiller.ImageFilePath;
 import com.example.nemol.googlephotokiller.Model.ActiveUser;
@@ -216,7 +216,7 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
     public void downloadPhotos(ServerDoneEvent done) {
         if (done.getState()) {
             cursorAdapter.changeCursor(getCursor());
-            DBController controller = new DBController(this);
+            DBPhotoController controller = new DBPhotoController(this);
             Cursor cursor = controller.getPhotoList(albumId);
             if (cursor != null) {
                 while (cursor.moveToNext()) {
@@ -286,7 +286,7 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
         }
     }
 
-    public Cursor getCursor() {
+    public Cursor getCursor() { // TODO: 27.03.2018 перенести
         SQLiteOpenHelper DBHelper = new PhotoStoreDBHelper(this);
         SQLiteDatabase db = DBHelper.getReadableDatabase();
         return db.query("PHOTOS", new String[]{"_id", "PHOTO_LINK", "ALBUM_ID"},
@@ -313,6 +313,11 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
                             .setPositiveButton("Да",
                                     new DialogInterface.OnClickListener() {
                                         public void onClick(DialogInterface dialog, int id) {
+                                            final String photoPath = builder.getContext().
+                                                    getExternalFilesDir(Environment.DIRECTORY_PICTURES).
+                                                    getAbsolutePath() + File.separator;
+                                            new DBPhotoController(builder.getContext()).deletePhoto(photo);
+                                            new File(photoPath + photo.getPhotoLink()).delete();
                                             PhotoController.deletePhoto(builder.getContext(), photo);
                                         }
                                     })
@@ -334,6 +339,8 @@ public class ImagesActivity extends AppCompatActivity implements PhotoController
     public void onRefresh() {
         if (ActiveUser.isOnline()) {
             PhotoController.getPhotoList(albumId);
+        }else{
+            mSwipeRefreshLayout.setRefreshing(false);
         }
     }
 }

@@ -1,7 +1,6 @@
 package com.example.nemol.googlephotokiller.Activity;
 
 import android.app.AlertDialog;
-import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
@@ -24,9 +23,9 @@ import android.widget.Toast;
 import com.example.nemol.googlephotokiller.Adapter.AlbumListCursorAdapter;
 import com.example.nemol.googlephotokiller.Callback.AlbumControllerCallback;
 import com.example.nemol.googlephotokiller.Controller.AlbumController;
-import com.example.nemol.googlephotokiller.Controller.DBController;
-import com.example.nemol.googlephotokiller.Controller.PhotoController;
-import com.example.nemol.googlephotokiller.Model.Photo;
+import com.example.nemol.googlephotokiller.Controller.DBAlbumController;
+import com.example.nemol.googlephotokiller.Controller.DBPhotoController;
+import com.example.nemol.googlephotokiller.Controller.DBUserController;
 import com.example.nemol.googlephotokiller.Model.ServerDoneEvent;
 import com.example.nemol.googlephotokiller.Service.DBAlbumService;
 import com.example.nemol.googlephotokiller.Fragment.CreateAlbumDialogFragment;
@@ -119,7 +118,7 @@ public class MainActivity extends AppCompatActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_logout:
-                new DBController(this).deleteUser();
+                new DBUserController(this).deleteUser();
                 ActiveUser.isAuth(false);
                 startActivity(new Intent(this, LoginActivity.class));
                 finish();
@@ -139,16 +138,9 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    public Cursor getCursor() {
-        SQLiteOpenHelper DBHelper = new PhotoStoreDBHelper(this);
-        SQLiteDatabase db = DBHelper.getReadableDatabase();
-        return db.query("ALBUMS", new String[]{"_id", "ALBUM_TITLE"},
-                "USER_ID = ?", new String[]{Integer.toString(ActiveUser.getId())},
-                null, null, null);
-    }
-
     public void setAlbumList() {
-        cursorAdapter = new AlbumListCursorAdapter(this, getCursor());
+        Cursor cursor = new DBAlbumController(this).getAllAlbums(ActiveUser.getId());
+        cursorAdapter = new AlbumListCursorAdapter(this, cursor);
         cursorAdapter.setListener(new AlbumListCursorAdapter.Listener() {
             @Override
             public void onClick(Album album) {
@@ -157,6 +149,7 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onLongClick(final Album album) {
+                final int albumId = album.getAlbumId();
                 if (ActiveUser.isOnline()) {
                     final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                     builder.setTitle("Вы уверены")
@@ -164,7 +157,8 @@ public class MainActivity extends AppCompatActivity
                             .setPositiveButton("Да",
                                     new DialogInterface.OnClickListener() {
                                         public void onClick(DialogInterface dialog, int id) {
-                                            AlbumController.deleteAlbum(builder.getContext(), album.getAlbumId());
+                                            new DBPhotoController(builder.getContext()).deletePhotosInAlbum(albumId);
+                                            AlbumController.deleteAlbum(builder.getContext(), albumId);
                                         }
                                     })
                             .setNegativeButton("Нет",
@@ -187,7 +181,9 @@ public class MainActivity extends AppCompatActivity
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEvent(ServerDoneEvent event) {
         if (event.getState()) {
-            cursorAdapter.changeCursor(getCursor());
+            Cursor cursor = new DBAlbumController(this).getAllAlbums(ActiveUser.getId());
+            cursorAdapter.changeCursor(cursor);
+            cursor.close();
         } else {
             Toast.makeText(this, "Не удалось получить список альбомов", Toast.LENGTH_LONG).show();
         }
@@ -225,7 +221,9 @@ public class MainActivity extends AppCompatActivity
     public void deleteAlbum(int code, int albumId) {
         if (code == HttpStatus.SC_OK) {
             Toast.makeText(this, "Альбом удалён", Toast.LENGTH_LONG).show();
-            cursorAdapter.changeCursor(getCursor());
+            Cursor cursor = new DBAlbumController(this).getAllAlbums(ActiveUser.getId());
+            cursorAdapter.changeCursor(cursor);
+            cursor.close();
         }
     }
 
@@ -233,6 +231,8 @@ public class MainActivity extends AppCompatActivity
     public void onRefresh() {
         if (ActiveUser.isOnline()) {
             AlbumController.getAllAlbums();
+        }else{
+            mSwipeRefreshLayout.setRefreshing(false);
         }
     }
 }

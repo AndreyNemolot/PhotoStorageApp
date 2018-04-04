@@ -52,7 +52,7 @@ public class CreateAlbumDialogFragment extends DialogFragment implements AlbumCo
         String title = etTitle.getText().toString();
         if(!title.equals("")){
             progressBar.setVisibility(View.VISIBLE);
-            AlbumController.createAlbum(title);
+            AlbumController.addAlbum(title);
         }else{
             tvMessage.setText(getResources().getString(R.string.need_set_title));
             tvMessage.setVisibility(View.VISIBLE);

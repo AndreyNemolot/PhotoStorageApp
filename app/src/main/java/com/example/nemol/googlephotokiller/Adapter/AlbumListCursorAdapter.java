@@ -78,7 +78,7 @@ public class AlbumListCursorAdapter extends CursorRecyclerViewAdapter<AlbumListC
                 if (listener != null) {
                     listener.onLongClick(album);
                 }
-                return false;
+                return true;
             }
         });
 

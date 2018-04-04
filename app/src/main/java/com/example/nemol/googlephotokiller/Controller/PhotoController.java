@@ -91,12 +91,10 @@ public class PhotoController{
     }
 
     public static void deletePhoto(Context context, Photo photo) {
-        final String photoPath = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES).
-                getAbsolutePath() + File.separator;
-        new File(photoPath + photo.getPhotoLink()).delete();
+
         RequestParams params = new RequestParams();
         params.put("photo_id", photo.getPhotoId());
-        new DBController(context).deletePhoto(photo);
+
 
         RestClient.delete(PHOTO_URL, params, new JsonHttpResponseHandler() {
 

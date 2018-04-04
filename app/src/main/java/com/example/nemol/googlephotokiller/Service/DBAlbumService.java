@@ -1,10 +1,9 @@
 package com.example.nemol.googlephotokiller.Service;
 
 import android.app.IntentService;
-import android.content.ContentValues;
 import android.content.Intent;
 
-import com.example.nemol.googlephotokiller.Controller.DBController;
+import com.example.nemol.googlephotokiller.Controller.DBAlbumController;
 import com.example.nemol.googlephotokiller.Model.Album;
 import com.example.nemol.googlephotokiller.Model.ServerDoneEvent;
 import com.google.gson.Gson;
@@ -31,7 +30,7 @@ public class DBAlbumService extends IntentService {
     protected void onHandleIntent(Intent intent) {
         synchronized (this) {
             String albums = intent.getStringExtra(INTENT_MESSAGE);
-            DBController controller = new DBController(this);
+            DBAlbumController controller = new DBAlbumController(this);
             try {
                 JSONArray jsonArrayAlbums = new JSONArray(albums);
                 for (int i = 0; i < jsonArrayAlbums.length(); i++) {

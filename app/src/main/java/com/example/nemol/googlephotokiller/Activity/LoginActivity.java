@@ -19,7 +19,7 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.example.nemol.googlephotokiller.Callback.UserControllerCallback;
-import com.example.nemol.googlephotokiller.Controller.DBController;
+import com.example.nemol.googlephotokiller.Controller.DBUserController;
 import com.example.nemol.googlephotokiller.Controller.UserController;
 import com.example.nemol.googlephotokiller.Model.ActiveUser;
 import com.example.nemol.googlephotokiller.Model.User;
@@ -54,7 +54,7 @@ public class LoginActivity extends AppCompatActivity implements UserControllerCa
         UserController.registerCallBack(this);
         ButterKnife.bind(this);
 
-        if(new DBController(this).loadUser()){
+        if(new DBUserController(this).getUser()){
             showProgress(true);
             UserController.authorization();
         }
@@ -165,12 +165,12 @@ public class LoginActivity extends AppCompatActivity implements UserControllerCa
     @Override
     public void userAction(int code) {
         if (code == HttpStatus.SC_OK){
-            new DBController(this).addUser();
+            new DBUserController(this).addUser();
             Toast.makeText(this, "Пользователь авторизован", Toast.LENGTH_LONG).show();
             startActivity(new Intent(this, MainActivity.class));
             finish();
         }else{
-            if(new DBController(this).loadUserByLogin()){
+            if(new DBUserController(this).getUserByLogin()){
                 Toast.makeText(this, "Пользователь в оффлайн режиме", Toast.LENGTH_LONG).show();
                 startActivity(new Intent(this, MainActivity.class));
                 finish();
